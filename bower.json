@@ -1,0 +1,26 @@
+{
+  "name": "haq",
+  "version": "0.0.0",
+  "authors": [
+    "Atom Mac <atom.mac@gmail.com>"
+  ],
+  "description": "A roguelike where you're the monster.",
+  "main": "index.html",
+  "keywords": [
+    "roguelike"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "rot.js": "~0.5.0",
+    "phaser": "~2.4.3",
+    "requirejs": "~2.1.20"
+  },
+  "devDependencies": {}
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="80" height="80" tilewidth="16" tileheight="16">
+ <tileset firstgid="1" name="Wall" tilewidth="16" tileheight="16">
+  <image source="../dawnhack/Objects/Wall.png" width="320" height="816"/>
+ </tileset>
+ <tileset firstgid="1021" name="Tile" tilewidth="16" tileheight="16">
+  <image source="../dawnhack/Objects/Tile.png" width="128" height="64"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="80" height="80">
+  <data encoding="base64" compression="zlib">
+   eJzt2kGOgjAAheGGcAEPpJ6Bpbo2xIWHMF5cXJAgttD6bIH2/5KuJpTpy6TtI2MMAABAXvbdOASO4yK/qZ/U62m6savDRiO8L7bU6yE/8hsiP80W8rua8D061Wg3kF9uI3V+v9wRXPeGmHOuNb9/7X/Dd8eYk/y0OclPm5P8tDlTrOd9F7kFjlZ431CM/JZcT0y283V4V7PdKdf8nSK13HpOauSnIb95tj2u38OU/KbmzYkto8bxs1NlzHk0LpXfs7n+bYbkd++yqurPcSe/r3X295LxdyWf/FzPlpSfa/jkV9rZYsuv3/vH35V88nM9W1J+7H/+QvJ7WM7fZ+H52bp7382V+9/UvKWgf8yjf2joHxrOXw39Q0P/0NA/NOx/GvqHhv4RD/1jHv1DQ//QcP5q6B8a+oeG/qFh/9PQPzT0j3joHxry05CfJtf/6wYAAAAAAAAAAACAVF7kieKT
+  </data>
+ </layer>
+</map>
