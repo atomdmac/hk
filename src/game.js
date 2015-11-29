@@ -1,7 +1,9 @@
 define([
     'phaser',
-    'rot'
-], function (Phaser, ROT) { 
+    'rot',
+    'monster',
+    'level'
+], function (Phaser, ROT, Monster, Level) { 
     'use strict';
 
     // Private vars.
@@ -36,41 +38,50 @@ define([
 
         preload: function() {
 
-            game.load.spritesheet('walls', 'assets/dawnhack/Objects/Wall.png', 16, 16, 50);
+            // game.load.spritesheet('walls', 'assets/dawnhack/Objects/Wall.png', 16, 16, 50);
+            game.load.spritesheet('dungeon', 'assets/sprites/dungeon-debug.png', 16, 16, 3);
+            game.load.image('player', 'assets/sprites/player-debug.png', 16, 16);
 
         },
         
         create: function() {
-            var map = new Phaser.Tilemap(game, null, 16, 16, 100, 100);
-            var layer = map.createBlankLayer('dungeon', 100, 100, 16, 16);
+            // Set up level/game world.
+            var level = new Level(game, 100, 100, 16);
 
-            // ROT.RNG.setSeed(1234);
-            var mapDigger = new ROT.Map.Digger();
-            var count = 0;
-            mapDigger.create(function (x, y, type) {
-                if(type) {
-                    console.log(count);
-                    var tile = new Phaser.Tile(layer, count, x, y, 16, 16);
-                    map.putTile(tile, x, y, layer);
-                }
+            // Set up player.
+            var playerSpawn = level.getRandomPassable();
+            var player = new Monster(game, playerSpawn.x, playerSpawn.y, 'player');
+            player.setMap(level.tilemap);
+            player.teleport(playerSpawn.x, playerSpawn.y);
+            game.add.existing(player);
+            game.camera.follow(player);
+
+            // User input
+            game.input.keyboard.addKey(Phaser.Keyboard.H).onDown.add(function () {
+                player.move(game.directions.W);
+            });
+            game.input.keyboard.addKey(Phaser.Keyboard.L).onDown.add(function () {
+                player.move(game.directions.E);
+            });
+            game.input.keyboard.addKey(Phaser.Keyboard.J).onDown.add(function () {
+                player.move(game.directions.S);
+            });
+            game.input.keyboard.addKey(Phaser.Keyboard.B).onDown.add(function () {
+                player.move(game.directions.SW);
+            });
+            game.input.keyboard.addKey(Phaser.Keyboard.N).onDown.add(function () {
+                player.move(game.directions.SE);
+            });
+            game.input.keyboard.addKey(Phaser.Keyboard.K).onDown.add(function () {
+                player.move(game.directions.N);
+            });
+            game.input.keyboard.addKey(Phaser.Keyboard.Y).onDown.add(function () {
+                player.move(game.directions.NW);
+            });
+            game.input.keyboard.addKey(Phaser.Keyboard.U).onDown.add(function () {
+                player.move(game.directions.NE);
             });
 
-            var drawDoor = function(x, y) {
-                // console.log('drawing door!');
-                // display.draw(x, y, "", "", "red");
-            };
-
-            var rooms = mapDigger.getRooms();
-            for (var i=0; i<rooms.length; i++) {
-                var room = rooms[i];
-
-                /*console.log('Room ', i, ': ', 
-                    room.getLeft(), room.getTop(),
-                    room.getRight(), room.getBottom()
-                );*/
-
-                room.getDoors(drawDoor);
-            }
         }
     };
     
