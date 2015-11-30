@@ -1,7 +1,8 @@
 define([
     'phaser',
-    'rot'
-], function (Phaser, ROT) { 
+    'rot',
+    'Door'
+], function (Phaser, ROT, Door) { 
     'use strict';
 
     // Private vars.
@@ -11,16 +12,15 @@ define([
         return Math.round((Math.random() * (max - min)) + min);
     }
 
-    function Level (_game, width, height, cellSize) {
+    function Level (_game, width, height, tileWidth, tileHeight) {
 
         game = _game;
         var self = this;
 
         // Set up the special map for physics + visuals.
-        this.cellSize = cellSize;
-        this.tilemap = new Phaser.Tilemap(game, null, cellSize, cellSize, width, height);
-        this.tilemap.addTilesetImage('dungeon', 'dungeon', cellSize, cellSize, 0, 0, 0);
-        this.terrain = this.tilemap.createBlankLayer('terrain', width, height, cellSize, cellSize);
+        this.tilemap = new Phaser.Tilemap(game, null, tileWidth, tileHeight, width, height);
+        this.tilemap.addTilesetImage('dungeon', 'dungeon', tileWidth, tileHeight, 0, 0, 0);
+        this.terrain = this.tilemap.createBlankLayer('terrain', width, height, tileWidth, tileHeight);
 
         // Resize the world to our new dungeon.
         this.terrain.resizeWorld();
@@ -28,13 +28,17 @@ define([
         // Set up collisions with walls.
         this.tilemap.setCollision([1], true, 'terrain', true);
 
+        // Getters / setters
+        this.__defineGetter__('tileWidth', function () { return self.tilemap.tileWidth; });
+        this.__defineGetter__('tileHeight', function () { return self.tilemap.tileHeight; });
+
         // For kicks, let's start with a set seed.
         // ROT.RNG.setSeed(1);
 
         // Generate terrain.
         var mapDigger = new ROT.Map.Digger();
         mapDigger.create(function (x, y, type) {
-            var tile = new Phaser.Tile(self.terrain, type, x, y, cellSize, cellSize);
+            var tile = new Phaser.Tile(self.terrain, type, x, y, tileWidth, tileHeight);
             if(type === 0) {
                 tile.setCollision(false, false, false, false);
             }
@@ -47,12 +51,19 @@ define([
 
         // Generate doors.
         this.rooms = mapDigger.getRooms();
+        this.doors = game.add.group();
         var makeDoor = function (x, y) {
-            self.tilemap.removeTile(x, y, self.terrain);
+            /*self.tilemap.removeTile(x, y, self.terrain);
             self.tilemap.putTile(
-                    new Phaser.Tile(self.terrain, 2, x, y, self.cellSize, self.cellSize),
-                    x, y, self.terrain
-                );
+                new Phaser.Tile(self.terrain, 2, x, y, self.tileWidth, self.tileHeight),
+                x, y, self.terrain
+            );*/
+            var door = new Door(game, x, y);
+            door.setLevel(self);
+            door.teleport(x, y);
+            self.doors.add(door);
+            // game.add.existing(door);
+
         };
         for (var i=0; i<this.rooms.length; i++) {
             this.rooms[i].getDoors(makeDoor);
@@ -74,10 +85,12 @@ define([
     };
 
     Level.prototype.isPassable = function (x, y) {
-        this.tilemap.getTile(x, y);
+        var tile = this.tilemap.getTile(x, y);
+        return (tile && !tile.collides);
     };
 
-    Level.prototype.isTransparent = function (x, y) {};
+    // TODO: Use specific implemtnation for isTransparent instead of just using isPassable.
+    Level.prototype.isTransparent = Level.prototype.isPassable;
 
     Level.prototype.getVisibleAt = function (x, y, callback) {};
 

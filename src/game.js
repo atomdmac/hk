@@ -39,19 +39,19 @@ define([
         preload: function() {
 
             // game.load.spritesheet('walls', 'assets/dawnhack/Objects/Wall.png', 16, 16, 50);
-            game.load.spritesheet('dungeon', 'assets/sprites/dungeon-debug.png', 16, 16, 3);
+            game.load.spritesheet('dungeon', 'assets/sprites/dungeon-debug.png', 16, 16, 4);
             game.load.image('player', 'assets/sprites/player-debug.png', 16, 16);
 
         },
         
         create: function() {
             // Set up level/game world.
-            var level = new Level(game, 100, 100, 16);
+            var level = new Level(game, 100, 100, 16, 16);
 
             // Set up player.
             var playerSpawn = level.getRandomPassable();
             var player = new Monster(game, playerSpawn.x, playerSpawn.y, 'player');
-            player.setMap(level.tilemap);
+            player.setLevel(level);
             player.teleport(playerSpawn.x, playerSpawn.y);
             game.add.existing(player);
             game.camera.follow(player);
