@@ -83,7 +83,7 @@ define([
                 this.movementTween.to({
                     x: this.x + (direction.x * this.level.tileWidth),
                     y: this.y + (direction.y * this.level.tileHeight)
-                }, 50, null, true);
+                }, 150, null, true);
             } else {
                 this.x += (direction.x * this.level.tileWidth);
                 this.y += (direction.y * this.level.tileHeight);

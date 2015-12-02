@@ -1,8 +1,9 @@
 define([
     'phaser',
     'rot',
-    'Door'
-], function (Phaser, ROT, Door) { 
+    'entity',
+    'door'
+], function (Phaser, ROT, Entity, Door) { 
     'use strict';
 
     // Private vars.
@@ -61,19 +62,44 @@ define([
             var door = new Door(game, x, y);
             door.setLevel(self);
             door.teleport(x, y);
+            // Random chance that the door is locked.
+            // if(Math.random() < 0.15) door.isLocked = true;
             self.doors.add(door);
-            // game.add.existing(door);
 
         };
         for (var i=0; i<this.rooms.length; i++) {
             this.rooms[i].getDoors(makeDoor);
         }
 
-        // Generate exits
+        // Generate entrance.
+        var entrance = this.getRandomPassable();
+        this.entrance = new Entity(game, entrance.x, entrance.y, 'dungeon');
+        this.entrance.setLevel(this);
+        this.entrance.teleport(entrance.x, entrance.y);
+        this.entrance.frame = 4;
+
+        // Generate exit
+        var exit = this.getRandomPassable();
+        this.exit = new Entity(game, exit.x, exit.y, 'dungeon');
+        this.exit.setLevel(this);
+        this.exit.teleport(exit.x, exit.y);
+        this.exit.frame = 5;
 
         // Generate monsters
 
     }
+
+    Level.prototype.revive = function () {
+        this.terrain.revive();
+        this.terrain.game = game;
+        game.add.existing(this.terrain);
+        this.terrain.resizeWorld();
+
+        game.add.existing(this.exit);
+        game.add.existing(this.entrance);
+
+        game.add.existing(this.doors);
+    };
 
     Level.prototype.getRandomPassable = function () {
         var room = new Phaser.ArrayUtils.getRandomItem(this.rooms);

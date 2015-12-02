@@ -18,10 +18,20 @@ define([
         this._open = false;
         this.__defineGetter__('isOpen', function () { return this._isOpen; });
         this.__defineSetter__('isOpen', function (newValue) { 
+            if(this.isLocked) {
+                console.log('Locked :(');
+                return;
+            }
             this._isOpen = newValue;
             if(this._isOpen) this.frame = 3;
             else this.frame = 2;
             this.events.onOpen.dispatch(this);
+        });
+
+        this._isLocked = false;
+        this.__defineGetter__('isLocked', function () { return this._isLocked; });
+        this.__defineSetter__('isLocked', function (newValue) { 
+            this._isLocked = newValue;
         });
 
         // Signals
@@ -34,11 +44,21 @@ define([
     Door.prototype.constructor = Door;
 
     Door.prototype.open = function () {
-        if (!this.isOpen) this.isOpen = true;
+        if (!this.isOpen) {
+            this.isOpen = true;
+            return true;
+        } else {
+            return false;
+        }
     };
 
     Door.prototype.close = function () {
-        if(this.isOpen) this.isOpen = false;
+        if(this.isOpen) {
+            this.isOpen = false;
+            return true;
+        } else {
+            return false;
+        }
     };
 
     return Door;
