@@ -71,19 +71,19 @@ define([
             this.rooms[i].getDoors(makeDoor);
         }
 
-        // Generate entrance.
-        var entrance = this.getRandomPassable();
-        this.entrance = new Entity(game, entrance.x, entrance.y, 'dungeon');
-        this.entrance.setLevel(this);
-        this.entrance.teleport(entrance.x, entrance.y);
-        this.entrance.frame = 4;
+        // Generate upstairs.
+        var upstairs = this.getRandomPassable();
+        this.upstairs = new Entity(game, upstairs.x, upstairs.y, 'dungeon');
+        this.upstairs.setLevel(this);
+        this.upstairs.teleport(upstairs.x, upstairs.y);
+        this.upstairs.frame = 4;
 
-        // Generate exit
-        var exit = this.getRandomPassable();
-        this.exit = new Entity(game, exit.x, exit.y, 'dungeon');
-        this.exit.setLevel(this);
-        this.exit.teleport(exit.x, exit.y);
-        this.exit.frame = 5;
+        // Generate downstairs
+        var downstairs = this.getRandomPassable();
+        this.downstairs = new Entity(game, downstairs.x, downstairs.y, 'dungeon');
+        this.downstairs.setLevel(this);
+        this.downstairs.teleport(downstairs.x, downstairs.y);
+        this.downstairs.frame = 5;
 
         // Generate monsters
 
@@ -91,12 +91,11 @@ define([
 
     Level.prototype.revive = function () {
         this.terrain.revive();
-        this.terrain.game = game;
         game.add.existing(this.terrain);
         this.terrain.resizeWorld();
 
-        game.add.existing(this.exit);
-        game.add.existing(this.entrance);
+        game.add.existing(this.downstairs);
+        game.add.existing(this.upstairs);
 
         game.add.existing(this.doors);
     };
