@@ -58,13 +58,20 @@ define([
         this.level = level;
     };
     
-    Entity.prototype.canSee = function (x, y) {
+    Entity.prototype.canSee = function (target) {
         if(!this.level) return false;
         var los = this._losLine;
-        los.start.x = this.x;
-        los.start.y = this.y;
-        los.end.x = x;
-        los.end.y = y;
+        if(arguments.length > 1) {
+            los.start.x = this.x;
+            los.start.y = this.y;
+            los.end.x = arguments[0];
+            los.end.y = arguments[1];
+        } else {
+            los.start.x = this.x;
+            los.start.y = this.y;
+            los.end.x = target.x;
+            los.end.y = target.y;
+        }
         var path = this.level.terrain.getRayCastTiles(los, null, true);
         if(path.length) return false;
         return true;
@@ -79,8 +86,9 @@ define([
             targetPos.x = arguments[0];
             targetPos.y = arguments[1];
         } else {
-            targetPos.x = target.tilePosition.x;
-            targetPos.y = target.tilePosition.y;
+            // Attempt to use tilePosition property if available.
+            targetPos.x = target.tilePosition ? target.tilePosition.x : target.x;
+            targetPos.y = target.tilePosition ? target.tilePosition.y : target.y;
         }
 
         // Calculate slope.
