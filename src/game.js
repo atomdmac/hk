@@ -56,7 +56,7 @@ define([
             levels = [];
 
             // Set up player.
-            player = new Monster(game, 0, 0, 'player');
+            game.player = player = new Player(game, 0, 0, 'player');
             game.add.existing(player);
 
             // User input
@@ -87,7 +87,6 @@ define([
             game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onDown.add(function () {
 
                 if (player.tilePosition.x === level.downstairs.tilePosition.x && player.tilePosition.y === level.downstairs.tilePosition.y) {
-                    console.log('down...');
                     self.goDown();
                 }
                 else if (player.tilePosition.x === level.upstairs.tilePosition.x && player.tilePosition.y === level.upstairs.tilePosition.y) {
@@ -200,7 +199,7 @@ define([
             level.revive();
 
             // Set up player.
-            player = new Player(game, 0, 0, 'player');
+            // player = new Player(game, 0, 0, 'player');
             game.add.existing(player);
             
             // Set up player.
