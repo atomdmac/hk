@@ -2,9 +2,9 @@ define([
     'phaser',
     'rot',
     'entity',
-    'monster',
+    'undead',
     'door'
-], function (Phaser, ROT, Entity, Monster, Door) { 
+], function (Phaser, ROT, Entity, Undead, Door) { 
     'use strict';
 
     // Private vars.
@@ -83,7 +83,7 @@ define([
         var curMonster, curSpawn;
         for(var m=0; m<10; m++) {
         	curSpawn = this.getRandomPassable();
-        	curMonster = new Monster(game, curSpawn.x, curSpawn.y, 'undead');
+        	curMonster = new Undead(game, curSpawn.x, curSpawn.y, 'undead');
         	curMonster.setLevel(this);
         	curMonster.teleport(curSpawn.x, curSpawn.y);
         	// TODO: randomize actual monster types, not just visual appearence.

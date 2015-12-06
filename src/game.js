@@ -98,7 +98,7 @@ define([
             game.input.keyboard.addKey(Phaser.Keyboard.A).onDown.add(function () {
                 if(level.monsters) {
                     level.monsters.forEach(function (monster) {
-                        monster.moveToward(player);
+                        monster.act();
                     });
                 }
             });
