@@ -13,6 +13,10 @@ define([
 
         Entity.call(this, game, x, y, 'dungeon');
 
+        // Identifying information
+        this.tags.door = true;
+        this.tags.passable = false;
+
         this.frame = 2;
 
         this._open = false;

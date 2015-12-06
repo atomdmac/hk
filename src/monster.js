@@ -13,8 +13,12 @@ define([
 
         Entity.call(this, game, x, y, key);
 
-        // Stats
+        // Identifying information
         this.name = 'Monster';
+        this.tags.monster = true;
+        this.tags.passable = false;
+        
+        // Stats
         this.health = 100;
         this.maxHealth = this.health;
 

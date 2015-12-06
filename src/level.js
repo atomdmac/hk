@@ -2,8 +2,9 @@ define([
     'phaser',
     'rot',
     'entity',
+    'monster',
     'door'
-], function (Phaser, ROT, Entity, Door) { 
+], function (Phaser, ROT, Entity, Monster, Door) { 
     'use strict';
 
     // Private vars.
@@ -40,13 +41,6 @@ define([
         var mapDigger = new ROT.Map.Digger();
         mapDigger.create(function (x, y, type) {
             var tile = new Phaser.Tile(self.terrain, type, x, y, tileWidth, tileHeight);
-            if(type === 0) {
-                tile.setCollision(false, false, false, false);
-            }
-            else if(type === 1) {
-                tile.setCollision(true, true, true, true);
-            }
-
             self.tilemap.putTile(tile, x, y, self.terrain);
         });
 
@@ -54,11 +48,10 @@ define([
         this.rooms = mapDigger.getRooms();
         this.doors = game.add.group();
         var makeDoor = function (x, y) {
-            /*self.tilemap.removeTile(x, y, self.terrain);
-            self.tilemap.putTile(
-                new Phaser.Tile(self.terrain, 2, x, y, self.tileWidth, self.tileHeight),
-                x, y, self.terrain
-            );*/
+			// Random chance that door will not be generated.
+			if(Math.random() < 0.75) return;
+
+			// .. else make a door.
             var door = new Door(game, x, y);
             door.setLevel(self);
             door.teleport(x, y);
@@ -86,8 +79,42 @@ define([
         this.downstairs.frame = 5;
 
         // Generate monsters
+        this.monsters = game.add.group();
+        var curMonster, curSpawn;
+        for(var m=0; m<10; m++) {
+        	curSpawn = this.getRandomPassable();
+        	curMonster = new Monster(game, curSpawn.x, curSpawn.y, 'undead');
+        	curMonster.setLevel(this);
+        	curMonster.teleport(curSpawn.x, curSpawn.y);
+        	// TODO: randomize actual monster types, not just visual appearence.
+        	curMonster.frame = Math.round(Math.random() * 35);
+        	this.monsters.addChild(curMonster);
+        }
+        // Generate other dungeon features
+
+        // Generate items
 
     }
+
+    Level.prototype.addEntity = function (entity) {
+    	if(entity.tag.monster) {
+    		this.monsters.add(entity);
+    		entity.setLevel(this);
+    	}
+
+    	else if(entity.tag.player) {
+    		this.player = entity;
+    		entity.setLevel(this);
+    	}
+
+    	this.addChild(entity);
+    };
+
+    // Return a serialized version of data representing this map.  Can be used
+    // to retore the level later.
+    Level.prototype.save = function () {};
+
+    Level.prototype.load = function (json) {};
 
     Level.prototype.revive = function () {
         this.terrain.revive();
@@ -98,6 +125,8 @@ define([
         game.add.existing(this.upstairs);
 
         game.add.existing(this.doors);
+
+        game.add.existing(this.monsters);
     };
 
     Level.prototype.getRandomPassable = function () {
@@ -110,7 +139,7 @@ define([
     };
 
     Level.prototype.isPassable = function (x, y) {
-        var tile = this.tilemap.getTile(x, y);
+        var tile = this.tilemap.getTile(x, y, this.terrain);
         return (tile && !tile.collides);
     };
 
@@ -118,6 +147,27 @@ define([
     Level.prototype.isTransparent = Level.prototype.isPassable;
 
     Level.prototype.getVisibleAt = function (x, y, callback) {};
+
+    Level.prototype.containsMonster = function (x, y) {
+    	// Check monsters
+    	for(var m=0; m<this.monsters.length; m++) {
+    		if(this.monsters.getAt(m).tilePosition.x === x && this.monsters.getAt(m).tilePosition.y === y) {
+    			return this.monsters.getAt(m);
+    		}
+    	}
+		return false;
+    };
+
+    Level.prototype.containsDoor = function (x, y) {
+    	// Check doors
+    	for(var door=null, d=0; d<this.doors.length; d++) {
+    		door = this.doors.getAt(d);
+    		if(door.tilePosition.x === x && door.tilePosition.y === y) {
+    			return door;
+    		}
+    	}
+		return false;
+    };
 
     return Level;
 });

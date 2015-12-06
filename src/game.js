@@ -3,9 +3,10 @@ define([
     'rot',
     'entity',
     'monster',
+    'player',
     'level',
     'utilities/state-machine'
-], function (Phaser, ROT, Entity, Monster, Level, StateMachine) { 
+], function (Phaser, ROT, Entity, Monster, Player, Level, StateMachine) { 
     'use strict';
 
     // Private vars.
@@ -39,6 +40,7 @@ define([
         preload: function() {
 
             // game.load.spritesheet('walls', 'assets/dawnhack/Objects/Wall.png', 16, 16, 50);
+            game.load.spritesheet('undead', 'assets/sprites/dawnhack-undead-1.png', 16, 16, 36);
             game.load.spritesheet('dungeon', 'assets/sprites/dungeon-debug.png', 16, 16, 6);
             game.load.image('player', 'assets/sprites/player-debug.png', 16, 16);
 
@@ -90,6 +92,14 @@ define([
                 }
                 else if (player.tilePosition.x === level.upstairs.tilePosition.x && player.tilePosition.y === level.upstairs.tilePosition.y) {
                     self.goUp();
+                }
+            });
+
+            game.input.keyboard.addKey(Phaser.Keyboard.A).onDown.add(function () {
+                if(level.monsters) {
+                    level.monsters.forEach(function (monster) {
+                        monster.moveToward(player);
+                    });
                 }
             });
 
@@ -190,7 +200,7 @@ define([
             level.revive();
 
             // Set up player.
-            player = new Monster(game, 0, 0, 'player');
+            player = new Player(game, 0, 0, 'player');
             game.add.existing(player);
             
             // Set up player.
