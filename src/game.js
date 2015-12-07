@@ -86,10 +86,10 @@ define([
             // });
             game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onDown.add(function () {
 
-                if (player.tilePosition.x === level.downstairs.tilePosition.x && player.tilePosition.y === level.downstairs.tilePosition.y) {
+                if (player.tile.x === level.downstairs.tile.x && player.tile.y === level.downstairs.tile.y) {
                     self.goDown();
                 }
-                else if (player.tilePosition.x === level.upstairs.tilePosition.x && player.tilePosition.y === level.upstairs.tilePosition.y) {
+                else if (player.tile.x === level.upstairs.tile.x && player.tile.y === level.upstairs.tile.y) {
                     self.goUp();
                 }
             });
@@ -136,10 +136,10 @@ define([
 
                         // Interact
                         // else if(game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
-                        //     if (player.tilePosition.x === level.downstairs.tilePosition.x && player.tilePosition.y === level.downstairs.tilePosition.y) {
+                        //     if (player.tile.x === level.downstairs.tile.x && player.tile.y === level.downstairs.tile.y) {
                         //         self.goDown();
                         //     }
-                        //     else if (player.tilePosition.x === level.upstairs.tilePosition.x && player.tilePosition.y === level.upstairs.tilePosition.y) {
+                        //     else if (player.tile.x === level.upstairs.tile.x && player.tile.y === level.upstairs.tile.y) {
                         //         self.goUp();
                         //     }
                         // }
@@ -218,7 +218,7 @@ define([
 
 
                 this.switchToLevel(level);
-                player.teleport(level.downstairs.tilePosition.x, level.downstairs.tilePosition.y);
+                player.teleport(level.downstairs.tile.x, level.downstairs.tile.y);
             }
         },
 
@@ -234,7 +234,7 @@ define([
                 currentLevelIndex = levels.length - 1;
                 this.switchToLevel(level);
             }
-            player.teleport(level.upstairs.tilePosition.x, level.upstairs.tilePosition.y);
+            player.teleport(level.upstairs.tile.x, level.upstairs.tile.y);
         }
     };
     

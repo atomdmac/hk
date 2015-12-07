@@ -15,8 +15,8 @@ define([
         // A hash of tiles that the monster can see.
         this._visibleTiles = {};
 
-        // The Entity's position in terms of map tiles.
-        this.tilePosition = new Phaser.Point(0, 0);
+        // The tile that the entity is currently on.
+        this.tile = null;
 
         // Movement tween.
         this.movementTween = null;
@@ -86,13 +86,13 @@ define([
             targetPos.x = arguments[0];
             targetPos.y = arguments[1];
         } else {
-            // Attempt to use tilePosition property if available.
-            targetPos.x = target.tilePosition ? target.tilePosition.x : target.x;
-            targetPos.y = target.tilePosition ? target.tilePosition.y : target.y;
+            // Attempt to use tile property if available.
+            targetPos.x = target.tile ? target.tile.x : target.x;
+            targetPos.y = target.tile ? target.tile.y : target.y;
         }
 
         // Calculate slope.
-        Phaser.Point.subtract(targetPos, this.tilePosition, slope);
+        Phaser.Point.subtract(targetPos, this.tile, slope);
         Phaser.Point.normalize(slope, slope);
 
         targetDir.x = Math.round(slope.x);
@@ -148,12 +148,9 @@ define([
     Entity.prototype.takeDamage = function (amount, attacker) {};
 
     Entity.prototype.move = function (direction, skipAnimation) {
-        var newTileX = this.tilePosition.x + direction.x,
-            newTileY = this.tilePosition.y + direction.y;
+        var newTileX = this.tile.x + direction.x,
+            newTileY = this.tile.y + direction.y;
 
-        // Do not continue if impassable.
-        if(!this.level.isPassable(newTileX, newTileY)) return false;
-        
         // See if door is blocking the way.
         var door = this.level.containsDoor(newTileX, newTileY);
         if(door && !door.isOpen) {
@@ -164,31 +161,35 @@ define([
         // See if another monster is blocking the way.
         var monster = this.level.containsMonster(newTileX, newTileY);
         if(monster && monster.tags.passable === false) return false;
+        
+        // Do not continue if terrain impassable.
+        if(!this.level.isPassable(newTileX, newTileY)) return false;
 
-        var oldTileX = this.tilePosition.x,
-            oldTileY = this.tilePosition.y,
+        var oldTileX = this.tile.x,
+            oldTileY = this.tile.y,
             oldX = this.x,
             oldY = this.y;
-        this.tilePosition.x += direction.x;
-        this.tilePosition.y += direction.y;
+        
+        // Update tile reference.
+        this.tile = this.level.getTile(newTileX, newTileY);
+
         if(!skipAnimation) {
             this.movementTween = game.add.tween(this);
             this.movementTween.to({
-                x: (this.tilePosition.x * this.level.tileWidth),
-                y: (this.tilePosition.y * this.level.tileHeight)
+                x: (this.tile.x * this.level.tileWidth),
+                y: (this.tile.y * this.level.tileHeight)
             }, 150, null, true);
         } else {
             this.x += (direction.x * this.level.tileWidth);
             this.y += (direction.y * this.level.tileHeight);
         }
-        this.events.onMove.dispatch(oldX, oldY, this.x, this.y, oldTileX, oldTileY, this.tilePosition.x, this.tilePosition.y);
+        this.events.onMove.dispatch(oldX, oldY, this.x, this.y, oldTileX, oldTileY, this.tile.x, this.tile.y);
         return true;
     };
 
     Entity.prototype.teleport = function (x, y) {
-        if(this.level.isPassable(x, y)) {
-            this.tilePosition.x = x;
-            this.tilePosition.y = y;
+        if(this.level && this.level.isPassable(x, y)) {
+            this.tile = this.level.getTile(x, y);
             this.x = x * this.level.tileWidth;
             this.y = y * this.level.tileHeight;
             return true;

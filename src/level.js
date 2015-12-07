@@ -146,12 +146,16 @@ define([
     // TODO: Use specific implemtnation for isTransparent instead of just using isPassable.
     Level.prototype.isTransparent = Level.prototype.isPassable;
 
+    Level.prototype.getTile = function (x, y) {
+    	return this.tilemap.getTile(x, y, this.terrain);
+    };
+
     Level.prototype.getVisibleAt = function (x, y, callback) {};
 
     Level.prototype.containsMonster = function (x, y) {
     	// Check monsters
     	for(var m=0; m<this.monsters.length; m++) {
-    		if(this.monsters.getAt(m).tilePosition.x === x && this.monsters.getAt(m).tilePosition.y === y) {
+    		if(this.monsters.getAt(m).tile.x === x && this.monsters.getAt(m).tile.y === y) {
     			return this.monsters.getAt(m);
     		}
     	}
@@ -162,7 +166,7 @@ define([
     	// Check doors
     	for(var door=null, d=0; d<this.doors.length; d++) {
     		door = this.doors.getAt(d);
-    		if(door.tilePosition.x === x && door.tilePosition.y === y) {
+    		if(door.tile.x === x && door.tile.y === y) {
     			return door;
     		}
     	}
