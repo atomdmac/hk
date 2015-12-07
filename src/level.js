@@ -55,6 +55,12 @@ define([
             var door = new Door(game, x, y);
             door.setLevel(self);
             door.teleport(x, y);
+
+            // Open and close door to reset tilemap collision for LoS.
+            door.open();
+            // Some doors will remain open.
+            if(Math.random() < 0.85) door.close();
+
             // Random chance that the door is locked.
             // if(Math.random() < 0.15) door.isLocked = true;
             self.doors.add(door);

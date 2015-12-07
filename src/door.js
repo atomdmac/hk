@@ -50,6 +50,7 @@ define([
     Door.prototype.open = function () {
         if (!this.isOpen) {
             this.isOpen = true;
+            if(this.tile) this.tile.setCollision(false, false, false, false);
             return true;
         } else {
             return false;
@@ -59,6 +60,7 @@ define([
     Door.prototype.close = function () {
         if(this.isOpen) {
             this.isOpen = false;
+            if(this.tile) this.tile.setCollision(true, true, true, true);
             return true;
         } else {
             return false;

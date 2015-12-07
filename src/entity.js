@@ -72,7 +72,14 @@ define([
             los.end.x = target.x;
             los.end.y = target.y;
         }
-        var path = this.level.terrain.getRayCastTiles(los, null, true);
+
+        //  Use target centers.
+        los.start.x += this.level.tileWidth / 2;
+        los.start.y += this.level.tileHeight / 2;
+        los.end.x += this.level.tileWidth / 2;
+        los.end.y += this.level.tileHeight / 2;
+
+        var path = this.level.terrain.getRayCastTiles(los, 4, true);
         if(path.length) return false;
         return true;
     };
