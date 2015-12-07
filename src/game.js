@@ -40,7 +40,7 @@ define([
         preload: function() {
 
             // game.load.spritesheet('walls', 'assets/dawnhack/Objects/Wall.png', 16, 16, 50);
-            game.load.spritesheet('undead', 'assets/sprites/dawnhack-undead-1.png', 16, 16, 36);
+            game.load.spritesheet('undead', 'assets/sprites/dawnhack-undead-1.png', 16, 16, 23);
             game.load.spritesheet('dungeon', 'assets/sprites/dungeon-debug.png', 16, 16, 6);
             game.load.image('player', 'assets/sprites/player-debug.png', 16, 16);
 

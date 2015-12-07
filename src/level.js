@@ -93,7 +93,7 @@ define([
         	curMonster.setLevel(this);
         	curMonster.teleport(curSpawn.x, curSpawn.y);
         	// TODO: randomize actual monster types, not just visual appearence.
-        	curMonster.frame = Math.round(Math.random() * 35);
+        	curMonster.frame = Math.round(Math.random() * 23);
         	this.monsters.addChild(curMonster);
         }
         // Generate other dungeon features
