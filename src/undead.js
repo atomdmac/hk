@@ -59,7 +59,7 @@ define([
 
     };
 
-    Undead.prototype.kill = function () {};
+    // Undead.prototype.kill = function () {};
 
     Undead.prototype.follow = function (target) {};
 
@@ -68,7 +68,9 @@ define([
     Undead.prototype.travel = function (x, y) {};
 
     // Used to determine whether another Undead is hostile to me or not.
-    Undead.prototype.reactTo = function (target) {};
+    Undead.prototype.reactTo = function (target) {
+        return Monster.reactions.HOSTILE;
+    };
 
     Undead.prototype.setLevel = function (level) {
         Monster.prototype.setLevel.call(this, level);

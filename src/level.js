@@ -1,10 +1,11 @@
 define([
     'phaser',
     'rot',
+    'dungeon-tile',
     'entity',
     'undead',
     'door'
-], function (Phaser, ROT, Entity, Undead, Door) { 
+], function (Phaser, ROT, DungeonTile, Entity, Undead, Door) { 
     'use strict';
 
     // Private vars.
@@ -22,6 +23,59 @@ define([
         // Set up the special map for physics + visuals.
         this.tilemap = new Phaser.Tilemap(game, null, tileWidth, tileHeight, width, height);
         this.tilemap.addTilesetImage('dungeon', 'dungeon', tileWidth, tileHeight, 0, 0, 0);
+
+
+        // GROOOOOOOSSSS!!!
+        this.tilemap.putTile = function (tile, x, y, layer) {
+        	 if (tile === null){
+	            return this.removeTile(x, y, layer);
+	        }
+
+	        layer = this.getLayer(layer);
+
+	        if (x >= 0 && x < this.layers[layer].width && y >= 0 && y < this.layers[layer].height){
+	            var index;
+
+	            if (tile instanceof Phaser.Tile){
+	                index = tile.index;
+
+	                if (this.hasTile(x, y, layer)) {
+	                    this.layers[layer].data[y][x].copy(tile);
+	                }
+	                else {
+	                    this.layers[layer].data[y][x] = tile;
+	                }
+	            }
+	            else {
+	                index = tile;
+
+	                if (this.hasTile(x, y, layer)) {
+	                    this.layers[layer].data[y][x].index = index;
+	                }
+	                else {
+	                    this.layers[layer].data[y][x] = new Phaser.Tile(this.layers[layer], index, x, y, this.tileWidth, this.tileHeight);
+	                }
+	            }
+
+	            if (this.collideIndexes.indexOf(index) > -1) {
+	                this.layers[layer].data[y][x].setCollision(true, true, true, true);
+	            }
+	            else {
+	                this.layers[layer].data[y][x].resetCollision();
+	            }
+
+	            this.layers[layer].dirty = true;
+
+	            this.calculateFaces(layer);
+
+	            return this.layers[layer].data[y][x];
+	        }
+
+	        return null;
+        };
+
+
+
         this.terrain = this.tilemap.createBlankLayer('terrain', width, height, tileWidth, tileHeight);
 
         // Resize the world to our new dungeon.
@@ -40,7 +94,7 @@ define([
         // Generate terrain.
         var mapDigger = new ROT.Map.Digger();
         mapDigger.create(function (x, y, type) {
-            var tile = new Phaser.Tile(self.terrain, type, x, y, tileWidth, tileHeight);
+            var tile = new DungeonTile(self.terrain, type, x, y, tileWidth, tileHeight);
             self.tilemap.putTile(tile, x, y, self.terrain);
         });
 
@@ -93,7 +147,11 @@ define([
         	curMonster.setLevel(this);
         	curMonster.teleport(curSpawn.x, curSpawn.y);
         	// TODO: randomize actual monster types, not just visual appearence.
-        	curMonster.frame = Math.round(Math.random() * 23);
+        	curMonster.frame = 1; // Math.round(Math.random() * 23);
+            curMonster.events.onKilled.add(this.handleMonsterDeath, this);
+
+
+
         	this.monsters.addChild(curMonster);
         }
         // Generate other dungeon features
@@ -156,6 +214,21 @@ define([
     	return this.tilemap.getTile(x, y, this.terrain);
     };
 
+    Level.prototype.getSurrounding = function (x, y, output) {
+    	output = output || {};
+
+    	output.N = this.getTile(x + game.direction.N, y + game.direction.N);
+    	output.NE = this.getTile(x + game.direction.NE, y + game.direction.NE);
+    	output.E = this.getTile(x + game.direction.E, y + game.direction.E);
+    	output.SE = this.getTile(x + game.direction.SE, y + game.direction.SE);
+    	output.S = this.getTile(x + game.direction.S, y + game.direction.S);
+    	output.SW = this.getTile(x + game.direction.SW, y + game.direction.SW);
+    	output.W = this.getTile(x + game.direction.W, y + game.direction.W);
+    	output.NW = this.getTile(x + game.direction.NW, y + game.direction.NW);
+
+    	return output;
+    };
+
     Level.prototype.getVisibleAt = function (x, y, callback) {};
 
     Level.prototype.containsMonster = function (x, y) {
@@ -165,6 +238,7 @@ define([
     			return this.monsters.getAt(m);
     		}
     	}
+    	if(game.player.tile.x == x && game.player.tile.y === y) return game.player;
 		return false;
     };
 
@@ -177,6 +251,10 @@ define([
     		}
     	}
 		return false;
+    };
+
+    Level.prototype.handleMonsterDeath = function (monster) {
+        this.monsters.remove(monster);
     };
 
     return Level;

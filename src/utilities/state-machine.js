@@ -16,12 +16,28 @@ function (Phaser) {
 
 	StateMachine.prototype.setState = function (name) {
 		if (!this.states[name]) throw ('State "' + name + '" does not exist.');
-		this.currentState = name;
-		this.onStateChange.dispatch(this, name);
+		if(this.hasState(this.currentState) && typeof this.states[this.currentState].onExit === 'function') {
+			this.states[this.currentState].onExit.call(this, name);
+		}
+		if(this.hasState(name) ) {
+			this.currentState = name;
+
+			if(typeof this.states[this.currentState].onEnter === 'function') {
+				this.states[this.currentState].onEnter.call(this, name);
+			}
+
+			// Let listeners know that the state changed.
+			this.onStateChange.dispatch(this, name);
+		}
+
 	};
 
 	StateMachine.prototype.getState = function () {
 		return this.currentState;
+	};
+
+	StateMachine.prototype.hasState = function (stateName) {
+		return (typeof this.states[stateName] === 'object');
 	};
 
 	StateMachine.prototype.handle = function (method) {

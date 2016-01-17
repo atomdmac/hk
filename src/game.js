@@ -4,13 +4,14 @@ define([
     'entity',
     'monster',
     'player',
+    'cursor',
     'level',
     'utilities/state-machine'
-], function (Phaser, ROT, Entity, Monster, Player, Level, StateMachine) { 
+], function (Phaser, ROT, Entity, Monster, Player, Cursor, Level, StateMachine) { 
     'use strict';
 
     // Private vars.
-    var game, player, levels, currentLevelIndex, level;
+    var game, player, cursor, levels, currentLevelIndex, level;
 
     function Game() {    
         console.log('Making the Game');    
@@ -20,9 +21,10 @@ define([
         constructor: Game,
 
         start: function() {
-            this.game = new Phaser.Game(800, 600, Phaser.AUTO, '', this);
+            this.game = new Phaser.Game(320, 240, Phaser.AUTO, '', this, false, false);
 
             game = this.game;
+
 
             // Directions that a character can move.
             game.directions = {
@@ -43,11 +45,14 @@ define([
             game.load.spritesheet('undead', 'assets/sprites/dawnhack-undead-1.png', 16, 16, 23);
             game.load.spritesheet('dungeon', 'assets/sprites/dungeon-debug.png', 16, 16, 6);
             game.load.image('player', 'assets/sprites/player-debug.png', 16, 16);
+            game.load.image('cursor', 'assets/sprites/cursor-debug.png', 16, 16);
 
         },
         
         create: function() {
             var self = this;
+            game.scale.setUserScale(2,2);
+            game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
 
             // Set up physics
             game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -57,7 +62,7 @@ define([
 
             // Set up player.
             game.player = player = new Player(game, 0, 0, 'player');
-            game.add.existing(player);
+            game.cursor = cursor = new Cursor(game, 0, 0, 'cursor');
 
             // User input
             // game.input.keyboard.addKey(Phaser.Keyboard.H).onDown.add(function () {
@@ -94,45 +99,12 @@ define([
                 }
             });
 
-            game.input.keyboard.addKey(Phaser.Keyboard.A).onDown.add(function () {
-                if(level.monsters) {
-                    level.monsters.forEach(function (monster) {
-                        monster.act();
-                    });
-                }
-            });
-
             this.input = new StateMachine();
             this.input.states = {
                 'normal': {
-                    'update': function () {
+                    'onKeyDown': function () {
                         // Don't continue if action is already being taken.
                         if(player.movementTween && player.movementTween.isRunning) { return; }
-
-                        if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
-                            player.move(game.directions.W);
-                        }
-                        else if (game.input.keyboard.isDown(Phaser.Keyboard.L)) {
-                            player.move(game.directions.E);
-                        }
-                        else if (game.input.keyboard.isDown(Phaser.Keyboard.J)) {
-                            player.move(game.directions.S);
-                        }
-                        else if (game.input.keyboard.isDown(Phaser.Keyboard.B)) {
-                            player.move(game.directions.SW);
-                        }
-                        else if (game.input.keyboard.isDown(Phaser.Keyboard.N)) {
-                            player.move(game.directions.SE);
-                        }
-                        else if (game.input.keyboard.isDown(Phaser.Keyboard.K)) {
-                            player.move(game.directions.N);
-                        }
-                        else if (game.input.keyboard.isDown(Phaser.Keyboard.Y)) {
-                            player.move(game.directions.NW);
-                        }
-                        else if (game.input.keyboard.isDown(Phaser.Keyboard.U)) {
-                            player.move(game.directions.NE);
-                        }
 
                         // Interact
                         // else if(game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
@@ -148,42 +120,110 @@ define([
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.C)) {
                             self.input.setState('close');
                         }
-                    }
-                },
-                'close': {
-                    'update': function () {
-                        console.log('close!');
-                        // Don't continue if action is already being taken.
-                        if(player.movementTween && player.movementTween.isRunning) return;
 
-                        if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
-                            player.move(game.directions.W);
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.PERIOD)) {
+                            if(level.monsters) {
+                                level.monsters.forEach(function (monster) {
+                                    monster.act();
+                                });
+                            }
+                        }
+                    },
+                    'update': function () {
+                        var nextRound = false;
+                        // Don't continue if action is already being taken.
+                        if(player.movementTween && player.movementTween.isRunning) { return; }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
+                            nextRound = player.move(game.directions.W);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.L)) {
-                            player.move(game.directions.E);
+                            nextRound = player.move(game.directions.E);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.J)) {
-                            player.move(game.directions.S);
+                            nextRound = player.move(game.directions.S);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.B)) {
-                            player.move(game.directions.SW);
+                            nextRound = player.move(game.directions.SW);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.N)) {
-                            player.move(game.directions.SE);
+                            nextRound = player.move(game.directions.SE);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.K)) {
-                            player.move(game.directions.N);
+                            nextRound = player.move(game.directions.N);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.Y)) {
-                            player.move(game.directions.NW);
+                            nextRound = player.move(game.directions.NW);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.U)) {
-                            player.move(game.directions.NE);
+                            nextRound = player.move(game.directions.NE);
                         }
+
+                        // Advance world state.
+                        if(nextRound) {
+                            if(level.monsters) {
+                                level.monsters.forEach(function (monster) {
+                                    monster.act();
+                                });
+                            }
+                        }
+                    }
+
+                },
+                'close': {
+                    'onEnter': function () {
+                        cursor.bringToTop();
+                        cursor.teleport(player.tile.x, player.tile.y);
+                        cursor.exists = true;
+                    },
+                    'onExit': function () {
+                        cursor.exists = false;
+                    },
+                    'onKeyDown': function () {
+                        // Don't continue if action is already being taken.
+                        if(cursor.movementTween && cursor.movementTween.isRunning) return;
+
+                        if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
+                            cursor.move(game.directions.W);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.L)) {
+                            cursor.move(game.directions.E);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.J)) {
+                            cursor.move(game.directions.S);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.B)) {
+                            cursor.move(game.directions.SW);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.N)) {
+                            cursor.move(game.directions.SE);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.K)) {
+                            cursor.move(game.directions.N);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.Y)) {
+                            cursor.move(game.directions.NW);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.U)) {
+                            cursor.move(game.directions.NE);
+                        }
+
+                        else if(game.input.keyboard.isDown(Phaser.Keyboard.C) || game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
+                            var door = level.containsDoor(cursor.tile.x, cursor.tile.y);
+                            if(door) door.close();
+                            self.input.setState('normal');
+                        }
+                    },
+                    'update': function () {
                     }
                 }
             };
             this.input.setState('normal');
+            game.input.keyboard.addCallbacks(this.input, 
+                // on Down
+                function (code) { self.input.handle('onKeyDown', code); }
+                // on Up
+                // on Press
+            );
 
             // Load first level.
             this.goDown();
@@ -199,13 +239,16 @@ define([
             level.revive();
 
             // Set up player.
-            // player = new Player(game, 0, 0, 'player');
             game.add.existing(player);
             
             // Set up player.
             player.bringToTop();
             player.setLevel(level);
             game.camera.follow(player);
+
+            // Set up cursor.
+            game.add.existing(cursor);
+            cursor.setLevel(level);
 
             // Debug
             console.log('Dungeon level: ', currentLevelIndex, ' :: ', level);

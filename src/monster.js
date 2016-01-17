@@ -55,11 +55,19 @@ define([
     Monster.prototype = Object.create(Entity.prototype);
     Monster.prototype.constructor = Monster;
 
+    Monster.reactions = {
+        HOSTILE: 0,
+        UNCOOPERATIVE: 1,
+        NEUTRAL: 2,
+        FRIENDLY: 3,
+        HELPFUL: 4
+    };
+
     // Called by the game scheduler.  Should return a "thenable" promise if we
     // need time to animate actions.
     Monster.prototype.act = function () {};
 
-    Monster.prototype.kill = function () {};
+    // Monster.prototype.kill = function () {};
 
     Monster.prototype.follow = function (target) {};
 
@@ -68,7 +76,10 @@ define([
     Monster.prototype.travel = function (x, y) {};
 
     // Used to determine whether another monster is hostile to me or not.
-    Monster.prototype.reactTo = function (target) {};
+    Monster.prototype.reactTo = function (target) {
+        // Default is hostile
+        return Monster.reactions.HOSTILE;
+    };
 
     return Monster;
 });

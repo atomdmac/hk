@@ -16,7 +16,7 @@ define([
         // Identifying information
         this.name = 'Player';
         this.tags.player = true;
-        
+
         // Stats
         this.health = 100;
         this.maxHealth = this.health;
@@ -45,6 +45,11 @@ define([
 
     Player.prototype = Object.create(Monster.prototype);
     Player.prototype.constructor = Player;
+
+    Player.prototype.defend = function () {
+        // You block 50% of the time.
+        return Math.random() > 0.5;
+    };
 
     return Player;
 });

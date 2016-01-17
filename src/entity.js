@@ -150,27 +150,46 @@ define([
     
     Entity.prototype.updateVision = function () {};
 
-    Entity.prototype.launchAttack = function (victim) {};
+    Entity.prototype.defend = function (victim) {
+        // Always fail for now.
+        return false;
+    };
 
-    Entity.prototype.takeDamage = function (amount, attacker) {};
+    Entity.prototype.takeDamage = function (amount, attacker) {
+        this.health -= amount;
+        if(this.health<=0) this.kill();
+        console.log(this.name, ' takes ', amount, ' damage from ', attacker.name);
+    };
 
     Entity.prototype.move = function (direction, skipAnimation) {
         var newTileX = this.tile.x + direction.x,
             newTileY = this.tile.y + direction.y;
 
-        // See if door is blocking the way.
-        var door = this.level.containsDoor(newTileX, newTileY);
-        if(door && !door.isOpen) {
-            door.open();
-            return true;
-        }
+        // If this entity is impassable, let's do some collision detection.
+        if(!this.tags.passable) {
+            // See if door is blocking the way.
+            var door = this.level.containsDoor(newTileX, newTileY);
+            if(door && !door.isOpen) {
+                door.open();
+                return true;
+            }
 
-        // See if another monster is blocking the way.
-        var monster = this.level.containsMonster(newTileX, newTileY);
-        if(monster && monster.tags.passable === false) return false;
-        
-        // Do not continue if terrain impassable.
-        if(!this.level.isPassable(newTileX, newTileY)) return false;
+            // See if another monster is blocking the way.
+            var monster = this.level.containsMonster(newTileX, newTileY);
+            if(monster && monster.tags.passable === false) {
+                // If they are, do we want to fight them?
+                if(this.reactTo(monster) === 0) {
+                    if(!monster.defend(this)) {
+                        monster.takeDamage(20, this);
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            // Do not continue if terrain impassable.
+            if(!this.level.isPassable(newTileX, newTileY)) return false;
+        }
 
         var oldTileX = this.tile.x,
             oldTileY = this.tile.y,
@@ -178,7 +197,9 @@ define([
             oldY = this.y;
         
         // Update tile reference.
+        if(this.tile) this.tile.remove(this);
         this.tile = this.level.getTile(newTileX, newTileY);
+        this.tile.add(this);
 
         if(!skipAnimation) {
             this.movementTween = game.add.tween(this);
@@ -196,7 +217,9 @@ define([
 
     Entity.prototype.teleport = function (x, y) {
         if(this.level && this.level.isPassable(x, y)) {
+            if(this.tile) this.tile.remove(this);
             this.tile = this.level.getTile(x, y);
+            this.tile.add(this);
             this.x = x * this.level.tileWidth;
             this.y = y * this.level.tileHeight;
             return true;
