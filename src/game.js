@@ -1,13 +1,14 @@
 define([
     'phaser',
     'rot',
+    'settings',
     'entity',
     'monster',
     'player',
     'cursor',
     'level',
     'utilities/state-machine'
-], function (Phaser, ROT, Entity, Monster, Player, Cursor, Level, StateMachine) { 
+], function (Phaser, ROT, Settings, Entity, Monster, Player, Cursor, Level, StateMachine) { 
     'use strict';
 
     // Private vars.
@@ -21,7 +22,7 @@ define([
         constructor: Game,
 
         start: function() {
-            this.game = new Phaser.Game(320, 240, Phaser.AUTO, '', this, false, false);
+            this.game = new Phaser.Game(Settings.stage.width, Settings.stage.height, Phaser.AUTO, '', this, false, false);
 
             game = this.game;
 
@@ -51,8 +52,8 @@ define([
         
         create: function() {
             var self = this;
-            game.scale.setUserScale(2,2);
-            game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
+            // game.scale.setUserScale(2,2);
+            // game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
 
             // Set up physics
             game.physics.startSystem(Phaser.Physics.ARCADE);
