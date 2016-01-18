@@ -273,7 +273,13 @@ define([
                 level = levels[currentLevelIndex];
                 this.switchToLevel(level);
             } else {
-                level = new Level(game, 100, 100, 16, 16);
+                level = new Level(
+                    game, 
+                    Settings.map.width, 
+                    Settings.map.height, 
+                    Settings.map.tile.width, 
+                    Settings.map.tile.height
+                );
                 levels.push(level);
                 currentLevelIndex = levels.length - 1;
                 this.switchToLevel(level);
