@@ -51,8 +51,8 @@ define([
     // need time to animate actions.
     Undead.prototype.act = function () {
         // If I can see the player, chase them immediately!
-        if(this.canSee(game.player)) this._quary = game.player;
-        // Random chance of new direction.
+        if(this.canSee(game.player) && game.player.alive) this._quary = game.player;
+        // else, wander randomly.
         else if(Math.random() < 0.25) this._quary = this.level.getRandomPassable();
 
         this.moveToward(this._quary);
