@@ -69,7 +69,8 @@ define([
 
     // Used to determine whether another Undead is hostile to me or not.
     Undead.prototype.reactTo = function (target) {
-        return Monster.reactions.HOSTILE;
+        // Hostile to all targets except myself.
+        return target !== this ? Monster.reactions.HOSTILE : Monster.reactions.HELPFUL;
     };
 
     Undead.prototype.setLevel = function (level) {
