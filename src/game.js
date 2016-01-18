@@ -175,9 +175,15 @@ define([
                         cursor.bringToTop();
                         cursor.teleport(player.tile.x, player.tile.y);
                         cursor.exists = true;
+
+                        // Follow the cursor.
+                        game.camera.unfollow();
+                        game.camera.follow(cursor);
                     },
                     'onExit': function () {
                         cursor.exists = false;
+                        game.camera.unfollow();
+                        game.camera.follow(player);
                     },
                     'onKeyDown': function () {
                         // Don't continue if action is already being taken.
