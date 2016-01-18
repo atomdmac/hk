@@ -43,10 +43,10 @@ define([
         preload: function() {
 
             // game.load.spritesheet('walls', 'assets/dawnhack/Objects/Wall.png', 16, 16, 50);
-            game.load.spritesheet('undead', 'assets/sprites/dawnhack-undead-1.png', 16, 16, 23);
-            game.load.spritesheet('dungeon', 'assets/sprites/dungeon-debug.png', 16, 16, 6);
-            game.load.image('player', 'assets/sprites/player-debug.png', 16, 16);
-            game.load.image('cursor', 'assets/sprites/cursor-debug.png', 16, 16);
+            game.load.spritesheet('undead', 'assets/sprites/dawnhack-undead-1.png', Settings.map.tile.width, Settings.map.tile.height, 32);
+            game.load.spritesheet('dungeon', 'assets/sprites/dungeon-debug.png', Settings.map.tile.width, Settings.map.tile.height, 6);
+            game.load.image('player', 'assets/sprites/player-debug.png', Settings.map.tile.width, Settings.map.tile.height);
+            game.load.image('cursor', 'assets/sprites/cursor-debug.png', Settings.map.tile.width, Settings.map.tile.height);
 
         },
         
