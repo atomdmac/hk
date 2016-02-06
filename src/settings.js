@@ -1,8 +1,7 @@
 define([
     'phaser',
-    'rot',
-    'entity'
-], function (Phaser, ROT, Entity) { 
+    'rot'
+], function (Phaser, ROT) { 
     'use strict';
 
     return {
