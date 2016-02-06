@@ -148,6 +148,7 @@ define([
         	curMonster.teleport(curSpawn.x, curSpawn.y);
         	// TODO: randomize actual monster types, not just visual appearence.
         	curMonster.frame = 1; // Math.round(Math.random() * 23);
+            curMonster.events.onMove.add(this.handleEntityMove, this);
             curMonster.events.onKilled.add(this.handleMonsterDeath, this);
 
 
@@ -172,6 +173,11 @@ define([
     	}
 
     	this.addChild(entity);
+    };
+
+    Level.prototype.handleEntityMove = function (entity, oldTile, newTile) {
+        oldTile.remove(entity);
+        newTile.add(entity);
     };
 
     // Return a serialized version of data representing this map.  Can be used

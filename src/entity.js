@@ -191,7 +191,8 @@ define([
             if(!this.level.isPassable(newTileX, newTileY)) return false;
         }
 
-        var oldTileX = this.tile.x,
+        var oldTile = this.tile,
+            oldTileX = this.tile.x,
             oldTileY = this.tile.y,
             oldX = this.x,
             oldY = this.y;
@@ -211,7 +212,7 @@ define([
             this.x += (direction.x * this.level.tileWidth);
             this.y += (direction.y * this.level.tileHeight);
         }
-        this.events.onMove.dispatch(oldX, oldY, this.x, this.y, oldTileX, oldTileY, this.tile.x, this.tile.y);
+        this.events.onMove.dispatch(this, oldTile, this.tile);
         return true;
     };
 
