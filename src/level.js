@@ -95,6 +95,7 @@ define([
         var mapDigger = new ROT.Map.Digger();
         mapDigger.create(function (x, y, type) {
             var tile = new DungeonTile(self.terrain, type, x, y, tileWidth, tileHeight);
+            tile.hide();
             self.tilemap.putTile(tile, x, y, self.terrain);
         });
 

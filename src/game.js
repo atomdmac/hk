@@ -26,6 +26,7 @@ define([
 
             game = this.game;
 
+            fov = new FOV(game);
 
             // Directions that a character can move.
             game.directions = {
@@ -161,6 +162,7 @@ define([
 
                         // Advance world state.
                         if(nextRound) {
+                            fov.update(player.tile.x, player.tile.y, 10);
                             if(level.monsters) {
                                 level.monsters.forEach(function (monster) {
                                     monster.act();
@@ -244,6 +246,8 @@ define([
             game.world.removeAll(false, true);
 
             level.revive();
+
+            game.level = level;
 
             // Set up player.
             game.add.existing(player);
