@@ -102,9 +102,14 @@ define([
         // Generate doors.
         this.rooms = mapDigger.getRooms();
         this.doors = game.add.group();
+
         var makeDoor = function (x, y) {
-			// Random chance that door will not be generated.
+            // Random chance that door will not be generated.
 			if(Math.random() < 0.75) return;
+
+            // Since adjacent rooms share doors, don't try to place another door
+            // here if one already exists.
+            if(self.containsDoor(x, y)) return;
 
 			// .. else make a door.
             var door = new Door(game, x, y);
