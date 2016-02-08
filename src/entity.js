@@ -57,6 +57,22 @@ define([
     Entity.prototype.setLevel = function (level) {
         this.level = level;
     };
+
+    Entity.prototype.show = function () {
+        if(this.visibilityTween) {
+            this.visibilityTween.stop();
+        }
+        this.visibilityTween = game.add.tween(this);
+        this.visibilityTween.to({alpha: 1}, 100, 'Linear', true);
+    };
+
+    Entity.prototype.hide = function () {
+        if(this.visibilityTween) {
+            this.visibilityTween.stop();
+        }
+        this.visibilityTween = game.add.tween(this);
+        this.visibilityTween.to({alpha: 0}, 100, 'Linear', true);
+    };
     
     Entity.prototype.canSee = function (target) {
         if(!this.level) return false;

@@ -23,7 +23,11 @@ define([
 
     DungeonTile.prototype.add = function (entity) {
         var index = this.contents.indexOf(entity);
-        if(index !== -1) this.contents.push(entity);
+        if(index === -1) {
+            if(this.alpha === 1) entity.show();
+            else entity.hide();
+            this.contents.push(entity);
+        }
     };
 
     DungeonTile.prototype.remove = function (entity) {
@@ -51,6 +55,20 @@ define([
             if(this.contents[i].tags[type]) output.push(this.contents[i]);
         }
         return output;
+    };
+
+    DungeonTile.prototype.hide = function () {
+        this.alpha = 0.5;
+        for(var i=0; i<this.contents.length; i++) {
+            this.contents[i].hide();
+        }
+    };
+
+    DungeonTile.prototype.show = function () {
+        this.alpha = 1;
+        for(var i=0; i<this.contents.length; i++) {
+            this.contents[i].show();
+        }
     };
 
     return DungeonTile;

@@ -7,12 +7,13 @@ define([
     'player',
     'cursor',
     'level',
+    'fov',
     'utilities/state-machine'
-], function (Phaser, ROT, Settings, Entity, Monster, Player, Cursor, Level, StateMachine) { 
+], function (Phaser, ROT, Settings, Entity, Monster, Player, Cursor, Level, FOV, StateMachine) { 
     'use strict';
 
     // Private vars.
-    var game, player, cursor, levels, currentLevelIndex, level;
+    var game, player, cursor, levels, currentLevelIndex, level, fov;
 
     function Game() {    
         console.log('Making the Game');    
@@ -25,8 +26,6 @@ define([
             this.game = new Phaser.Game(Settings.stage.width, Settings.stage.height, Phaser.AUTO, '', this, false, false);
 
             game = this.game;
-
-            fov = new FOV(game);
 
             // Directions that a character can move.
             game.directions = {
@@ -63,8 +62,32 @@ define([
             levels = [];
 
             // Set up player.
-            game.player = player = new Player(game, 0, 0, 'player');
-            game.cursor = cursor = new Cursor(game, 0, 0, 'cursor');
+            game.player     = player = new Player(game, 0, 0, 'player');
+
+            // Set up player Field of View
+            game.player.fov = fov    = new FOV(game, player, 10, 
+
+                // Callback for checking whether or not light passes thru a 
+                // given cell.
+                function (x, y) {
+                    if(game.level.isPassable(x, y)) return true;
+                    return false;
+                },
+
+                // Callback invoked for each cell that is in the FOV.
+                function (x, y, r, visibility) {
+                    var tile = self.game.level.getTile(x, y);
+                    tile.show();
+                }
+            );
+
+            // Update screen when player Field of View is recalculated.
+            game.player.fov.events.onUpdate.add(function (fov) {
+                game.level.terrain.dirty = true;
+            });
+
+            // Set up selection cursor.
+            game.cursor     = cursor  = new Cursor(game, 0, 0, 'cursor');
 
             // User input
             // game.input.keyboard.addKey(Phaser.Keyboard.H).onDown.add(function () {
@@ -273,6 +296,8 @@ define([
 
                 this.switchToLevel(level);
                 player.teleport(level.downstairs.tile.x, level.downstairs.tile.y);
+                player.fov.update();
+
             }
         },
 
@@ -295,6 +320,7 @@ define([
                 this.switchToLevel(level);
             }
             player.teleport(level.upstairs.tile.x, level.upstairs.tile.y);
+            player.fov.update();
         }
     };
     

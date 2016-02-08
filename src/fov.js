@@ -4,20 +4,33 @@ define([
 ], function (Phaser, ROT) { 
     'use strict';
 
-    function FOV (game) {
+    function FOV (game, origin, radius, lightPassesCb, computeCb) {
         var self = this;
 
         this.game = game;
+        
+        // The entity for which we are computing FOV.
+        this.origin = origin;
+
+        // The sight radius.
+        this.radius = radius;
+
+        // A cache of the tiles in the most recently computer FOV.
         this.current =  {};
 
-        var lightPasses = function (x, y) {
-            if(self.game.level.isPassable(x, y)) return true;
-            return false;
-        };
+        // Save callbacks
+        this.computeCb = computeCb;
         
-        this.fov = new ROT.FOV.PreciseShadowcasting(lightPasses);
+        // Create FOV.
+        this.fov = new ROT.FOV.PreciseShadowcasting(lightPassesCb);
+
+        // Events
+        this.events = {};
+        this.events.onUpdate = new Phaser.Signal();
+
     }
-    FOV.prototype.update = function (x, y, r) {
+
+    FOV.prototype.update = function () {
 
         var self = this;
 
@@ -31,12 +44,22 @@ define([
 
         // Create new FOV.
         var tile;
-        self.fov.compute(x, y, r, function(x, y, r, visibility) {
+        self.fov.compute(this.origin.tile.x, this.origin.tile.y, this.radius, function(x, y, r, visibility) {
+            // Add to the cache.
             tile = self.game.level.getTile(x, y);
-            tile.show();
+
+            // Invoke external callbacks if necessary.
+            if(typeof self.computeCb === 'function') {
+                self.computeCb.call(this, x, y, r, visibility);
+            }
+
+            // Save the tile to the cache.
             self.current[x+'_'+y] = tile;
+
         });
-        tile.layer.dirty = true;
+
+        // Tell listeners that FoV has been updated.
+        this.events.onUpdate.dispatch(this);
     };
 
     FOV.prototype.canSee = function (x, y) {
