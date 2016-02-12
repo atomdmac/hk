@@ -1,7 +1,7 @@
 define([
     'phaser',
-    'rot'
-], function (Phaser, ROT) { 
+    'rot', 
+], function (Phaser, ROT, StateMachine) { 
     'use strict';
 
     // Private vars.
@@ -27,12 +27,17 @@ define([
             if(this.alpha === 1) entity.show();
             else entity.hide();
             this.contents.push(entity);
+
+            // If this tile contains an impassable object, then it is impassable.
+            //if(entity.tags.passable) this.setCollision(false, false, false, false);
+            //else this.setCollision(true, true, true, true);
         }
     };
 
     DungeonTile.prototype.remove = function (entity) {
         var index = this.contents.indexOf(entity);
         if(index !== -1) this.contents.splice(index, 1);
+        // if(this.length === 0) this.setCollision(false, false, false, false);
     };
 
     DungeonTile.prototype.contains = function (entity) {

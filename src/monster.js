@@ -1,8 +1,9 @@
 define([
     'phaser',
     'rot',
-    'entity'
-], function (Phaser, ROT, Entity) { 
+    'entity',
+    'utilities/dice'
+], function (Phaser, ROT, Entity, Dice) { 
     'use strict';
 
     // Private vars.
@@ -24,9 +25,11 @@ define([
 
         // Combat stats.
         this.stats = {};
-        this.stats.attack = 10;
+        this.stats.level   = 1;
+        this.stats.hitDie  = '1d6';
+        this.stats.attack  = 10;
         this.stats.defense = 10;
-        this.stats.speed = 10;
+        this.stats.speed   = 10;
 
         // Derived stats.
 
@@ -74,6 +77,25 @@ define([
     Monster.prototype.avoid = function (target) {};
 
     Monster.prototype.travel = function (x, y) {};
+
+    /*
+     * Given an ability score, use the d20 method for determining an ability modifier.
+     */
+    Monster.prototype.getBaseAbilityMod = function (score) {
+        return Math.floor(score / 2) - 5;
+    };
+
+    Monster.prototype.rollToHitMelee = function () {
+        return this.getBaseAbilityMod(this.stats.attack) + Dice.roll('1d20');
+    };
+
+    Monster.prototype.rollForDamage = function () {
+        return Dice.roll(this.stats.hitDie);
+    };
+
+    Monster.prototype.defend = function (targetNumber) {
+        return this.getBaseAbilityMod(this.stats.defense) + Dice.roll('1d20') > targetNumber;
+    };
 
     // Used to determine whether another monster is hostile to me or not.
     Monster.prototype.reactTo = function (target) {

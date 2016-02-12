@@ -2,8 +2,9 @@ define([
     'phaser',
     'rot',
     'monster',
-    'utilities/state-machine'
-], function (Phaser, ROT, Monster, StateMachine) { 
+    'utilities/state-machine',
+    'progress-bar',
+], function (Phaser, ROT, Monster, StateMachine, ProgressBar) { 
     'use strict';
 
     // Private vars.
@@ -24,9 +25,10 @@ define([
         this.maxHealth = this.health;
 
         // Combat stats.
-        this.stats.attack = 10;
-        this.stats.defense = 10;
-        this.stats.speed = 10;
+        this.stats.hitDice = '1d8';
+        this.stats.attack = 0;
+        this.stats.defense = 0;
+        this.stats.speed = 5;
 
         // Derived stats.
 
@@ -41,6 +43,20 @@ define([
         this.equipment.feet = null;
 
         // Inventory
+
+        // Health display
+        this.healthBar = new ProgressBar(game, 0, -2);
+        this.healthBar.setSize(this.width, 2);
+        this.healthBar.setMin(0);
+        this.healthBar.setMax(this.maxHealth);
+        this.healthBar.setProgress(this.health);
+
+        this.addChild(this.healthBar);
+
+        var self = this;
+        this.events.onDamage.add(function (target, amount, attacker) {
+            self.healthBar.setProgress(target.health);
+        });
 
     }
 
@@ -70,7 +86,7 @@ define([
     // Used to determine whether another Undead is hostile to me or not.
     Undead.prototype.reactTo = function (target) {
         // Hostile to all targets except myself.
-        return target !== this ? Monster.reactions.HOSTILE : Monster.reactions.HELPFUL;
+        return target.tags.undead ?  Monster.reactions.HELPFUL : Monster.reactions.HOSTILE;
     };
 
     Undead.prototype.setLevel = function (level) {

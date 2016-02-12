@@ -147,7 +147,7 @@ define([
         // Generate monsters
         this.monsters = game.add.group();
         var curMonster, curSpawn;
-        for(var m=0; m<10; m++) {
+        for(var m=0; m<5; m++) {
         	curSpawn = this.getRandomPassable();
         	curMonster = new Undead(game, curSpawn.x, curSpawn.y, 'undead');
         	curMonster.setLevel(this);
@@ -242,6 +242,13 @@ define([
     };
 
     Level.prototype.getVisibleAt = function (x, y, callback) {};
+
+    Level.prototype.forEachAt = function (x, y, callback) {};
+
+    Level.prototype.containsPlayer = function (x, y) {
+        if(game.player.tile.x === x && game.player.tile.y === y) return true;
+        return false;
+    };
 
     Level.prototype.containsMonster = function (x, y) {
     	// Check monsters

@@ -8,12 +8,13 @@ define([
     'cursor',
     'level',
     'fov',
+    'progress-bar',
     'utilities/state-machine'
-], function (Phaser, ROT, Settings, Entity, Monster, Player, Cursor, Level, FOV, StateMachine) { 
+], function (Phaser, ROT, Settings, Entity, Monster, Player, Cursor, Level, FOV, ProgressBar, StateMachine) { 
     'use strict';
 
     // Private vars.
-    var game, player, cursor, levels, currentLevelIndex, level, fov;
+    var game, player, cursor, healthBar, levels, currentLevelIndex, level, fov, keyTimer;
 
     function Game() {    
         console.log('Making the Game');    
@@ -26,6 +27,7 @@ define([
             this.game = new Phaser.Game(Settings.stage.width, Settings.stage.height, Phaser.AUTO, '', this, false, false);
 
             game = this.game;
+            keyTimer = 0;
 
             // Directions that a character can move.
             game.directions = {
@@ -70,7 +72,7 @@ define([
                 // Callback for checking whether or not light passes thru a 
                 // given cell.
                 function (x, y) {
-                    if(game.level.isPassable(x, y)) return true;
+                    if(game.level.isPassable(x, y) || game.level.containsPlayer(x, y)) return true;
                     return false;
                 },
 
@@ -89,31 +91,25 @@ define([
             // Set up selection cursor.
             game.cursor     = cursor  = new Cursor(game, 0, 0, 'cursor');
 
-            // User input
-            // game.input.keyboard.addKey(Phaser.Keyboard.H).onDown.add(function () {
-            //     player.move(game.directions.W);
-            // });
-            // game.input.keyboard.addKey(Phaser.Keyboard.L).onDown.add(function () {
-            //     player.move(game.directions.E);
-            // });
-            // game.input.keyboard.addKey(Phaser.Keyboard.J).onDown.add(function () {
-            //     player.move(game.directions.S);
-            // });
-            // game.input.keyboard.addKey(Phaser.Keyboard.B).onDown.add(function () {
-            //     player.move(game.directions.SW);
-            // });
-            // game.input.keyboard.addKey(Phaser.Keyboard.N).onDown.add(function () {
-            //     player.move(game.directions.SE);
-            // });
-            // game.input.keyboard.addKey(Phaser.Keyboard.K).onDown.add(function () {
-            //     player.move(game.directions.N);
-            // });
-            // game.input.keyboard.addKey(Phaser.Keyboard.Y).onDown.add(function () {
-            //     player.move(game.directions.NW);
-            // });
-            // game.input.keyboard.addKey(Phaser.Keyboard.U).onDown.add(function () {
-            //     player.move(game.directions.NE);
-            // });
+            // Set up HUD.
+            healthBar = new ProgressBar(game, 0, 0);
+            game.add.existing(healthBar);
+            game.player.events.onDamage.add(function (target, amount, attacker) {
+                healthBar.setMin(0);
+                healthBar.setMax(target.maxHealth);
+                healthBar.setProgress(target.health);
+            });
+
+            healthBar.setMin(0);
+            healthBar.setMax(player.maxHealth);
+            healthBar.setProgress(player.health);
+
+            // Lock to camera.
+            healthBar.fixedToCamera = true;
+            healthBar.cameraOffset.x = 20;
+            healthBar.cameraOffset.y = 20;
+
+            // Keyboard Controls
             game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onDown.add(function () {
 
                 if (player.tile.x === level.downstairs.tile.x && player.tile.y === level.downstairs.tile.y) {
@@ -129,17 +125,7 @@ define([
                 'normal': {
                     'onKeyDown': function () {
                         // Don't continue if action is already being taken.
-                        if(player.movementTween && player.movementTween.isRunning) { return; }
-
-                        // Interact
-                        // else if(game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
-                        //     if (player.tile.x === level.downstairs.tile.x && player.tile.y === level.downstairs.tile.y) {
-                        //         self.goDown();
-                        //     }
-                        //     else if (player.tile.x === level.upstairs.tile.x && player.tile.y === level.upstairs.tile.y) {
-                        //         self.goUp();
-                        //     }
-                        // }
+                        if(keyTimer > game.time.now) { return; }
 
                         // Close
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.C)) {
@@ -157,7 +143,8 @@ define([
                     'update': function () {
                         var nextRound = false;
                         // Don't continue if action is already being taken.
-                        if(player.movementTween && player.movementTween.isRunning) { return; }
+                        if(keyTimer > game.time.now) { return; }
+
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
                             nextRound = player.move(game.directions.W);
                         }
@@ -185,6 +172,7 @@ define([
 
                         // Advance world state.
                         if(nextRound) {
+                            keyTimer = game.time.now + Settings.turnPause;
                             fov.update(player.tile.x, player.tile.y, 10);
                             if(level.monsters) {
                                 level.monsters.forEach(function (monster) {
@@ -212,8 +200,8 @@ define([
                     },
                     'onKeyDown': function () {
                         // Don't continue if action is already being taken.
-                        if(cursor.movementTween && cursor.movementTween.isRunning) return;
-
+                        if(keyTimer > game.time.now) { return; }
+                        
                         if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
                             cursor.move(game.directions.W);
                         }
@@ -241,7 +229,15 @@ define([
 
                         else if(game.input.keyboard.isDown(Phaser.Keyboard.C) || game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
                             var door = level.containsDoor(cursor.tile.x, cursor.tile.y);
-                            if(door) door.close();
+
+                            // If there is a door under the cursor, close it and
+                            // recalculate the player's FOV.
+                            if(door) {
+                                door.close();
+                                player.fov.update();
+                            }
+
+                            // Exit 'close door' mode.
                             self.input.setState('normal');
                         }
                     },
@@ -250,9 +246,17 @@ define([
                 }
             };
             this.input.setState('normal');
+
+            // Listen for user input.
+            var inputChokeTimer = game.time.now;
             game.input.keyboard.addCallbacks(this.input, 
                 // on Down
-                function (code) { self.input.handle('onKeyDown', code); }
+                function (code) { 
+                    if(inputChokeTimer < game.time.now) {
+                        inputChokeTimer = game.time.now + Settings.movePause;
+                        self.input.handle('onKeyDown', code); 
+                    }
+                }
                 // on Up
                 // on Press
             );
@@ -283,6 +287,10 @@ define([
             // Set up cursor.
             game.add.existing(cursor);
             cursor.setLevel(level);
+
+            // Re-adjust HUD.
+            game.add.existing(healthBar);
+            healthBar.bringToTop();
 
             // Debug
             console.log('Dungeon level: ', currentLevelIndex, ' :: ', level);

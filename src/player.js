@@ -22,6 +22,7 @@ define([
         this.maxHealth = this.health;
 
         // Combat stats.
+        this.stats.hitDice = '2d6';
         this.stats.attack = 10;
         this.stats.defense = 10;
         this.stats.speed = 10;
@@ -45,11 +46,6 @@ define([
 
     Player.prototype = Object.create(Monster.prototype);
     Player.prototype.constructor = Player;
-
-    Player.prototype.defend = function () {
-        // You block 50% of the time.
-        return Math.random() > 0.5;
-    };
 
     return Player;
 });

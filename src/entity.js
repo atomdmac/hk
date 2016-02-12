@@ -1,7 +1,8 @@
 define([
     'phaser',
-    'rot'
-], function (Phaser, ROT) { 
+    'rot',
+    'settings'
+], function (Phaser, ROT, Settings) { 
     'use strict';
 
     // Private vars.
@@ -47,6 +48,7 @@ define([
         this.events.onTeleport = new Phaser.Signal();
         this.events.onAttack = new Phaser.Signal();
         this.events.onDamage = new Phaser.Signal();
+        this.events.onDie = new Phaser.Signal();
         this.events.onSee = new Phaser.Signal();
         this.events.onUnsee = new Phaser.Signal();
     }
@@ -172,9 +174,28 @@ define([
     };
 
     Entity.prototype.takeDamage = function (amount, attacker) {
+        // Take damage.
         this.health -= amount;
-        if(this.health<=0) this.kill();
-        console.log(this.name, ' takes ', amount, ' damage from ', attacker.name);
+
+        // Let listeners know that we got a boo-boo :(
+        this.events.onDamage.dispatch(this, amount, attacker);
+
+        // Put it in the log.
+        console.log(this.name, '[', this.health, '] takes ', amount, ' damage from ', attacker.name, '[', attacker.health, ']');
+
+        // Did we die yet?
+        if(this.health<=0) this.die();
+    };
+
+    Entity.prototype.die = function () {
+        // Let listeners know
+        this.events.onDie.dispatch(this);
+
+        // Put it in the log.
+        console.log(this.name, ' dies.');
+        
+        // Aaaaand die.
+        this.kill();
     };
 
     Entity.prototype.move = function (direction, skipAnimation) {
@@ -195,13 +216,18 @@ define([
             if(monster && monster.tags.passable === false) {
                 // If they are, do we want to fight them?
                 if(this.reactTo(monster) === 0) {
-                    if(!monster.defend(this)) {
-                        monster.takeDamage(20, this);
-                        return true;
+                    var toHitRoll = this.rollToHitMelee();
+                    if(!monster.defend(toHitRoll)) {
+                        monster.takeDamage(this.rollForDamage(), this);
                     }
+                    return true;
+                } else {
+                    return false;
                 }
-                return false;
             }
+
+            // We can't move there if the player is already there.
+            if(game.level.containsPlayer(newTileX, newTileY)) return false;
             
             // Do not continue if terrain impassable.
             if(!this.level.isPassable(newTileX, newTileY)) return false;
@@ -223,7 +249,7 @@ define([
             this.movementTween.to({
                 x: (this.tile.x * this.level.tileWidth),
                 y: (this.tile.y * this.level.tileHeight)
-            }, 150, null, true);
+            }, Settings.turnPause, null, true);
         } else {
             this.x += (direction.x * this.level.tileWidth);
             this.y += (direction.y * this.level.tileHeight);
@@ -233,6 +259,7 @@ define([
     };
 
     Entity.prototype.teleport = function (x, y) {
+
         if(this.level && this.level.isPassable(x, y)) {
             if(this.tile) this.tile.remove(this);
             this.tile = this.level.getTile(x, y);

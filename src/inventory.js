@@ -19,7 +19,7 @@ define([
 
         // Signals.
         this.onAdd = new Phaser.Signal();
-        this.onRemove = new Phasaer.Signal();
+        this.onRemove = new Phaser.Signal();
         this.onConsume = new Phaser.Signal();
     }
 
@@ -38,6 +38,15 @@ define([
 
     // Return a reference to the item with the given name.
     Inventory.prototype.get = function (itemName) {};
+
+    function Item (_game, parent) {
+        this.name  = '';
+        this.type  = '';
+        this.count = 1;
+        this.consumable = true;
+    }
+
+    Item.prototype.use = function () {};
 
     return Inventory;
 });
