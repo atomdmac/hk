@@ -205,7 +205,7 @@ define([
 
                         // Follow the cursor.
                         game.camera.unfollow();
-                        game.camera.follow(cursor);
+                        game.camera.follow(cursor, Phaser.Camera.FOLLOW_TOPDOWN);
                     },
                     'onExit': function () {
                         cursor.exists = false;
