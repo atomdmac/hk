@@ -245,11 +245,19 @@ define([
             oldTileX = this.tile.x,
             oldTileY = this.tile.y,
             oldX = this.x,
-            oldY = this.y;
+            oldY = this.y,
+            newTile = this.level.getTile(newTileX, newTileY);
         
-        // Update tile reference.
+        // Update tile reference (if the new tile exists).
+        if(!newTile) {
+            return false;
+        }
+
+        // If I was on a tile previously, remove me from it.
         if(this.tile) this.tile.remove(this);
-        this.tile = this.level.getTile(newTileX, newTileY);
+
+        // ...and then add me to the new tile.
+        this.tile = newTile;
         this.tile.add(this);
 
         if(!skipAnimation) {
