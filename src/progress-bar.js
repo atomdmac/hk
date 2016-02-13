@@ -19,8 +19,6 @@ define([
         this.max = 100;
 
         this.barBg = new Phaser.Graphics(game, 0, 0);
-        //this.barBg.beginFill(0xffffff);
-        //this.barBg.drawRect(0, 0, this._drawSize.width, this._drawSize.height);
 
         Phaser.Sprite.call(this, game, 0, 0, this.barBg.generateTexture());
 
