@@ -169,6 +169,20 @@ define([
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.U)) {
                             nextRound = player.move(game.directions.NE);
                         }
+                        // Close
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.C)) {
+                            keyTimer = game.time.now + Settings.turnPause;
+                            self.input.setState('close');
+                        }
+                        // Wait
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.PERIOD)) {
+                            keyTimer = game.time.now + Settings.turnPause;
+                            if(level.monsters) {
+                                level.monsters.forEach(function (monster) {
+                                    monster.act();
+                                });
+                            }
+                        }
 
                         // Advance world state.
                         if(nextRound) {
@@ -199,32 +213,35 @@ define([
                         game.camera.follow(player);
                     },
                     'onKeyDown': function () {
+                    },
+                    'update': function () {
+                        var nextRound = false;
                         // Don't continue if action is already being taken.
                         if(keyTimer > game.time.now) { return; }
-                        
+
                         if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
-                            cursor.move(game.directions.W);
+                            nextRound = cursor.move(game.directions.W);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.L)) {
-                            cursor.move(game.directions.E);
+                            nextRound = cursor.move(game.directions.E);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.J)) {
-                            cursor.move(game.directions.S);
+                            nextRound = cursor.move(game.directions.S);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.B)) {
-                            cursor.move(game.directions.SW);
+                            nextRound = cursor.move(game.directions.SW);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.N)) {
-                            cursor.move(game.directions.SE);
+                            nextRound = cursor.move(game.directions.SE);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.K)) {
-                            cursor.move(game.directions.N);
+                            nextRound = cursor.move(game.directions.N);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.Y)) {
-                            cursor.move(game.directions.NW);
+                            nextRound = cursor.move(game.directions.NW);
                         }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.U)) {
-                            cursor.move(game.directions.NE);
+                            nextRound = cursor.move(game.directions.NE);
                         }
 
                         else if(game.input.keyboard.isDown(Phaser.Keyboard.C) || game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
@@ -239,9 +256,11 @@ define([
 
                             // Exit 'close door' mode.
                             self.input.setState('normal');
+
+                            nextRound = true;
                         }
-                    },
-                    'update': function () {
+
+                        if(nextRound) keyTimer = game.time.now + Settings.turnPause;
                     }
                 }
             };
