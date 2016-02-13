@@ -21,14 +21,22 @@ define([
         this.tags.passable = false;
         
         // Stats
-        this.health = 100;
+        this.health = 10;
         this.maxHealth = this.health;
 
+        // Abilities
+        this.abilities = {};
+        this.abilities.strength     = 12;
+        this.abilities.dexterity    = 8;
+        this.abilities.constitution = 0;
+        this.abilities.intelligence = 0;
+        this.abilities.wisdom       = 10;
+        this.abilities.charisma     = 1;
+
         // Combat stats.
-        this.stats.hitDice = '1d8';
-        this.stats.attack = 0;
-        this.stats.defense = 0;
-        this.stats.speed = 5;
+        this.stats.level   = 1;
+        this.stats.hitDie  = '1d6';
+        this.stats.baseDamage = '1d3';
 
         // Derived stats.
 

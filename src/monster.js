@@ -21,16 +21,23 @@ define([
         this.tags.passable = false;
         
         // Stats
-        this.health = 100;
+        this.health = 10;
         this.maxHealth = this.health;
+
+        // Abilities
+        this.abilities = {};
+        this.abilities.strength     = 10;
+        this.abilities.dexterity    = 10;
+        this.abilities.constitution = 10;
+        this.abilities.intelligence = 10;
+        this.abilities.wisdom       = 10;
+        this.abilities.charisma     = 10;
 
         // Combat stats.
         this.stats = {};
         this.stats.level   = 1;
         this.stats.hitDie  = '1d6';
-        this.stats.attack  = 10;
-        this.stats.defense = 10;
-        this.stats.speed   = 10;
+        this.stats.baseDamage = '1d3';
 
         // Derived stats.
 
@@ -79,23 +86,35 @@ define([
 
     Monster.prototype.travel = function (x, y) {};
 
+    Monster.prototype.getArmorClass = function () {
+        // TODO: Add armor bonus to AC.
+        // TODO: Add shield bonus to AC.
+        // TODO: Add size modifier to AC.
+        return 10 + this.getBaseAbilityMod('dexterity');
+    };
+
     /*
-     * Given an ability score, use the d20 method for determining an ability modifier.
+     * Given an ability, use the d20 method for determining an ability modifier.
      */
-    Monster.prototype.getBaseAbilityMod = function (score) {
-        return Math.floor(score / 2) - 5;
+    Monster.prototype.getBaseAbilityMod = function (abilityName) {
+        if(typeof this.abilities[abilityName] === 'number') {
+            return Math.floor(this.abilities[abilityName] / 2) - 5;
+        }
+
+        // If I dont' have that ability, return 0.
+        return 0;
     };
 
     Monster.prototype.rollToHitMelee = function () {
-        return this.getBaseAbilityMod(this.stats.attack) + Dice.roll('1d20');
+        return this.getBaseAbilityMod('strength') + Dice.roll('1d20');
     };
 
     Monster.prototype.rollForDamage = function () {
-        return Dice.roll(this.stats.hitDie);
+        return Dice.roll(this.stats.baseDamage);
     };
 
     Monster.prototype.defend = function (targetNumber) {
-        return this.getBaseAbilityMod(this.stats.defense) + Dice.roll('1d20') > targetNumber;
+        return this.getArmorClass() + Dice.roll('1d20') > targetNumber;
     };
 
     Monster.prototype.takeDamage = function (amount, attacker) {

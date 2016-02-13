@@ -18,14 +18,23 @@ define([
         this.tags.player = true;
 
         // Stats
-        this.health = 100;
+        this.health = 20;
         this.maxHealth = this.health;
 
+        // Abilities
+        this.abilities = {};
+        this.abilities.strength     = 10;
+        this.abilities.dexterity    = 10;
+        this.abilities.constitution = 10;
+        this.abilities.intelligence = 10;
+        this.abilities.wisdom       = 10;
+        this.abilities.charisma     = 10;
+
         // Combat stats.
-        this.stats.hitDice = '2d6';
-        this.stats.attack = 10;
-        this.stats.defense = 10;
-        this.stats.speed = 10;
+        this.stats = {};
+        this.stats.level   = 1;
+        this.stats.hitDie  = '1d6';
+        this.stats.baseDamage = '1d6';
 
         // Derived stats.
 
