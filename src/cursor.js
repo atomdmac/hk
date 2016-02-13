@@ -28,5 +28,8 @@ define([
     Cursor.prototype = Object.create(Entity.prototype);
     Cursor.prototype.constructor = Cursor;
 
+    Cursor.prototype.show = function () {};
+    Cursor.prototype.hide = function () {};
+
     return Cursor;
 });
