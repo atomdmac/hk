@@ -2,8 +2,9 @@ define([
     'phaser',
     'rot',
     'entity',
+    'combat-floater',
     'utilities/dice'
-], function (Phaser, ROT, Entity, Dice) { 
+], function (Phaser, ROT, Entity, CombatFloater, Dice) { 
     'use strict';
 
     // Private vars.
@@ -96,6 +97,12 @@ define([
     Monster.prototype.defend = function (targetNumber) {
         return this.getBaseAbilityMod(this.stats.defense) + Dice.roll('1d20') > targetNumber;
     };
+
+    Monster.prototype.takeDamage = function (amount, attacker) {
+        this.combatFloater.hit(amount);
+        Entity.prototype.takeDamage.call(this, amount, attacker);
+    };
+
 
     // Used to determine whether another monster is hostile to me or not.
     Monster.prototype.reactTo = function (target) {

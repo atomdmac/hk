@@ -1,8 +1,9 @@
 define([
     'phaser',
     'rot',
-    'settings'
-], function (Phaser, ROT, Settings) { 
+    'settings',
+    'combat-floater'
+], function (Phaser, ROT, Settings, CombatFloater) { 
     'use strict';
 
     // Private vars.
@@ -32,6 +33,10 @@ define([
         // Stats
         this.health = 100;
         this.maxHealth = this.health;
+
+        // Display combat results as floating text above this entity.
+        this.combatFloater = new CombatFloater(game, 0, 0);
+        this.addChild(this.combatFloater);
 
         // Cached reference to map (Phaser.TileMap instance)
         this.level = null;
@@ -219,6 +224,9 @@ define([
                     var toHitRoll = this.rollToHitMelee();
                     if(!monster.defend(toHitRoll)) {
                         monster.takeDamage(this.rollForDamage(), this);
+                    } else {
+                        this.combatFloater.miss();
+                        console.log(this.name, ' attacks ', monster.name, 'but misses.');
                     }
                     return true;
                 } else {
