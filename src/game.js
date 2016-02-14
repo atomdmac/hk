@@ -9,8 +9,9 @@ define([
     'level',
     'fov',
     'progress-bar',
+    'death-state',
     'utilities/state-machine'
-], function (Phaser, ROT, Settings, Entity, Monster, Player, Cursor, Level, FOV, ProgressBar, StateMachine) { 
+], function (Phaser, ROT, Settings, Entity, Monster, Player, Cursor, Level, FOV, ProgressBar, DeathState, StateMachine) { 
     'use strict';
 
     // Private vars.
@@ -57,6 +58,9 @@ define([
             // game.scale.setUserScale(2,2);
             // game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
 
+            // Add states.
+            game.state.add('Death', DeathState);
+
             // Set up physics
             game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -65,6 +69,10 @@ define([
 
             // Set up player.
             game.player     = player = new Player(game, 0, 0, 'player');
+
+            player.events.onDie.add(function () {
+                game.state.start('Death', true, false, {turns: scheduler.getTime()});
+            });
 
             // Set up player Field of View
             game.player.fov = fov    = new FOV(game, player, 10, 
