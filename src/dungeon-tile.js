@@ -12,7 +12,8 @@ define([
 
         Phaser.Tile.call(this, layer, type, x, y, width, height);
 
-        this.contents = [];
+        this.contents   = [];
+        this.discovered = false;
 
         // Signals
 
@@ -63,7 +64,11 @@ define([
     };
 
     DungeonTile.prototype.hide = function () {
-        this.alpha = 0.5;
+        if(this.discovered) {
+            this.alpha = 0.5;
+        } else {
+            this.alpha = 0;
+        }
         for(var i=0; i<this.contents.length; i++) {
             this.contents[i].hide();
         }

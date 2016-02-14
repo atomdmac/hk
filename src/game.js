@@ -79,7 +79,10 @@ define([
                 // Callback invoked for each cell that is in the FOV.
                 function (x, y, r, visibility) {
                     var tile = self.game.level.getTile(x, y);
-                    if(tile) tile.show();
+                    if(tile) {
+                        tile.discovered = true;
+                        tile.show();
+                    }
                 }
             );
 
