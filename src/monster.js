@@ -86,6 +86,10 @@ define([
 
     Monster.prototype.travel = function (x, y) {};
 
+    Monster.prototype.getSpeed = function () {
+        return this.abilities.dexterity;
+    };
+
     Monster.prototype.getArmorClass = function () {
         // TODO: Add armor bonus to AC.
         // TODO: Add shield bonus to AC.

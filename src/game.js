@@ -15,7 +15,7 @@ define([
     'use strict';
 
     // Private vars.
-    var game, player, cursor, healthBar, levels, currentLevelIndex, level, fov, keyTimer;
+    var game, scheduler, player, cursor, healthBar, levels, currentLevelIndex, level, fov, keyTimer;
 
     function Game() {    
         console.log('Making the Game');    
@@ -66,6 +66,9 @@ define([
 
             // List of levels.
             levels = [];
+
+            // Set up scheduler for timing.
+            game.scheduler = scheduler = new ROT.Scheduler.Speed();
 
             // Set up player.
             game.player     = player = new Player(game, 0, 0, 'player');
@@ -188,11 +191,7 @@ define([
                         // Wait
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.PERIOD)) {
                             keyTimer = game.time.now + Settings.turnPause;
-                            if(level.monsters) {
-                                level.monsters.forEach(function (monster) {
-                                    monster.act();
-                                });
-                            }
+                            nextRound = true;
                         }
 
                         // Advance world state.
@@ -200,9 +199,12 @@ define([
                             keyTimer = game.time.now + Settings.turnPause;
                             fov.update(player.tile.x, player.tile.y, 10);
                             if(level.monsters) {
-                                level.monsters.forEach(function (monster) {
-                                    monster.act();
-                                });
+                                for(var i=0; i<game.level.monsters.length; i++) {
+                                    var m = game.scheduler.next();
+                                    if(m === player) return;
+                                    else m.act();
+                                    
+                                }
                             }
                         }
                     }
@@ -305,6 +307,13 @@ define([
             level.revive();
 
             game.level = level;
+
+            // Set up scheduler.
+            game.scheduler.clear();
+            game.scheduler.add(player, true);
+            level.monsters.forEachAlive(function (monster) {
+                game.scheduler.add(monster, true);
+            });
 
             // Set up player.
             game.add.existing(player);
