@@ -16,8 +16,11 @@ define([
     CombatFloater.prototype.constructor = CombatFloater;
 
     CombatFloater.prototype.hit = function (amount) {
-        var text = game.add.text(this.parent.x, this.parent.y, amount, {fill: 'red', fontSize: '60px'}),
+        var text = game.add.text(this.parent.x + this.parent.width/2, this.parent.y, amount, {fill: 'red', fontSize: '60px'}),
             tween = game.add.tween(text);
+        
+        text.anchor.set(0.5);
+        
         tween
             .to({y: this.parent.y - 100, alpha: 0}, 1000, Phaser.Easing.Quadratic.easeOut, true)
             .onComplete.add(function () {
@@ -26,8 +29,10 @@ define([
     };
 
     CombatFloater.prototype.miss = function () {
-        var text = game.add.text(this.parent.x, this.parent.y, 'Miss!', {fill: 'yellow', fontSize: '12px'}),
+        var text = game.add.text(this.parent.x + this.parent.width/2, this.parent.y, 'Miss!', {fill: 'yellow', fontSize: '12px'}),
             tween = game.add.tween(text);
+
+        text.anchor.set(0.5);
 
         tween
             .to({y: this.parent.y - 100, alpha: 0}, 800, Phaser.Easing.Quadratic.easeOut, true)
