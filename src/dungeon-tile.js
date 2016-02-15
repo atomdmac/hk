@@ -28,17 +28,25 @@ define([
             if(this.alpha === 1) entity.show();
             else entity.hide();
             this.contents.push(entity);
-
-            // If this tile contains an impassable object, then it is impassable.
-            //if(entity.tags.passable) this.setCollision(false, false, false, false);
-            //else this.setCollision(true, true, true, true);
+            this.updatePassability();
         }
     };
 
     DungeonTile.prototype.remove = function (entity) {
         var index = this.contents.indexOf(entity);
         if(index !== -1) this.contents.splice(index, 1);
+        this.updatePassability();
         // if(this.length === 0) this.setCollision(false, false, false, false);
+    };
+
+    DungeonTile.prototype.updatePassability = function () {
+        for(var i=0; i<this.contents.length-1; i++) {
+            if(this.contents[i].tags.passable === false) {
+                this.setCollision(true, true, true, true);
+                return;
+            }
+        }
+        this.setCollision(false, false, false, false);
     };
 
     DungeonTile.prototype.contains = function (entity) {
