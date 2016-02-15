@@ -50,6 +50,7 @@ define([
     Door.prototype.open = function () {
         if (!this.isOpen) {
             this.isOpen = true;
+            this.tags.passable = true;
             if(this.tile) this.tile.setCollision(false, false, false, false);
             return true;
         } else {
@@ -58,12 +59,39 @@ define([
     };
 
     Door.prototype.close = function () {
+        // Can only close an open door...
         if(this.isOpen) {
-            this.isOpen = false;
-            if(this.tile) this.tile.setCollision(true, true, true, true);
-            return true;
+            if(this.tile && this.tile.collides) {
+                console.log('You try to close the door but the way is blocked...');
+                return false;
+            } else {
+                this.isOpen = false;
+                this.tags.passable = false;
+                if(this.tile) this.tile.setCollision(true, true, true, true);
+                return true;
+            }
         } else {
             return false;
+        }
+    };
+
+    Door.prototype.show = function () {
+        if(this.visibilityTween) {
+            this.visibilityTween.stop();
+        }
+        this.visibilityTween = game.add.tween(this);
+        this.visibilityTween.to({alpha: 1}, 100, 'Linear', true);
+    };
+
+    Door.prototype.hide = function () {
+        if(this.visibilityTween) {
+            this.visibilityTween.stop();
+        }
+        this.visibilityTween = game.add.tween(this);
+        if(this.tile && this.tile.discovered) {
+            this.visibilityTween.to({alpha: 0.5}, 100, 'Linear', true);
+        } else {
+            this.visibilityTween.to({alpha: 0}, 100, 'Linear', true);
         }
     };
 
