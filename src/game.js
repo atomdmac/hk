@@ -102,8 +102,9 @@ define([
                 game.level.terrain.dirty = true;
             });
 
+
             // Set up selection cursor.
-            game.cursor     = cursor  = new Cursor(game, 0, 0, 'cursor');
+            game.cursor = cursor  = new Cursor(game, 0, 0, 'cursor');
 
             // Set up HUD.
             healthBar = new ProgressBar(game, 0, 0);
