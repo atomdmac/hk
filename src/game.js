@@ -78,7 +78,7 @@ define([
             });
 
             // Set up player Field of View
-            game.player.fov = fov    = new FOV(game, player, 10, 
+            game.player.fov = fov    = new FOV(game, player, 5, 
 
                 // Callback for checking whether or not light passes thru a 
                 // given cell.
