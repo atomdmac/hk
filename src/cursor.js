@@ -17,6 +17,7 @@ define([
         // Identifying information
         this.name = 'cursor';
         this.tags.cursor = true;
+        this.tags.passable = false;
 
         // The point/target to bind this cursor to.
         this.target = target;
@@ -40,6 +41,10 @@ define([
             return false;
         }
     };
+
+    Cursor.prototype.handleObjectCollision = function (tile) { return false; };
+
+    Cursor.prototype.handleTerrainCollision = function (tile) { return false; };
 
     Cursor.prototype.show = function () {};
     Cursor.prototype.hide = function () {};
