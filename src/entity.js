@@ -208,77 +208,86 @@ define([
         this.kill();
     };
 
-    Entity.prototype.move = function (direction, skipAnimation) {
-        var newTileX = this.tile.x + direction.x,
-            newTileY = this.tile.y + direction.y;
+    // Return TRUE if an action was taken as a result of a collision.
+    Entity.prototype.handleObjectCollision = function (tile) {
+        // See if door is blocking the way.
+        var door = this.level.containsDoor(tile.x, tile.y);
+        if(door && !door.isOpen) {
+            door.open();
+            return true;
+        }
 
-        // If this entity is impassable, let's do some collision detection.
-        if(!this.tags.passable) {
-            // See if door is blocking the way.
-            var door = this.level.containsDoor(newTileX, newTileY);
-            if(door && !door.isOpen) {
-                door.open();
-                return true;
-            }
+        // See if another monster is blocking the way.
+        var monster = this.level.containsMonster(tile.x, tile.y);
+        if(monster && monster.tags.passable === false) {
+            // If they are, do we want to fight them?
+            if(this.reactTo(monster) === 0) {
+                var toHitRoll = this.rollToHitMelee();
 
-            // See if another monster is blocking the way.
-            var monster = this.level.containsMonster(newTileX, newTileY);
-            if(monster && monster.tags.passable === false) {
-                // If they are, do we want to fight them?
-                if(this.reactTo(monster) === 0) {
-                    var toHitRoll = this.rollToHitMelee();
+                // Attack animation.
+                var newX = (monster.tile.x*Settings.map.tile.width)  - (this.tile.x*Settings.map.tile.width),
+                    newY = (monster.tile.y*Settings.map.tile.height) - (this.tile.y*Settings.map.tile.height);
+                newX /= 4;
+                newY /= 4;
+                newX += (this.tile.x * Settings.map.tile.width);
+                newY += (this.tile.y * Settings.map.tile.height);
 
-                    // Attack animation.
-                    var newX = (monster.tile.x*Settings.map.tile.width)  - (this.tile.x*Settings.map.tile.width),
-                        newY = (monster.tile.y*Settings.map.tile.height) - (this.tile.y*Settings.map.tile.height);
-                    newX /= 4;
-                    newY /= 4;
-                    newX += (this.tile.x * Settings.map.tile.width);
-                    newY += (this.tile.y * Settings.map.tile.height);
+                var hitAnim = game.add.tween(this);
+                hitAnim.to(
+                    {
+                        x: newX,
+                        y: newY 
+                    }, Settings.turnPause/2, 'Linear', true, 0, 0, true
+                );
 
-                    var hitAnim = game.add.tween(this);
-                    hitAnim.to(
-                        {
-                            x: newX,
-                            y: newY 
-                        }, Settings.turnPause/2, 'Linear', true, 0, 0, true
-                    );
+                // Roll to hit.
+                if(!monster.defend(toHitRoll)) {
+                    monster.takeDamage(this.rollForDamage(), this);
+                } 
 
-                    // Roll to hit.
-                    if(!monster.defend(toHitRoll)) {
-                        monster.takeDamage(this.rollForDamage(), this);
-                    } 
-
-                    // Aw, I missed :()
-                    else {
-                        this.combatFloater.miss();
-                        game.log.print(this.name, ' attacks ', monster.name, 'but misses.');
-                    }
-                    return true;
-                } else {
-                    return false;
+                // Aw, I missed :()
+                else {
+                    this.combatFloater.miss();
+                    game.log.print(this.name, ' attacks ', monster.name, 'but misses.');
                 }
             }
-
-            // We can't move there if the player is already there.
-            if(game.level.containsPlayer(newTileX, newTileY)) return false;
             
-            // Do not continue if terrain impassable.
-            if(!this.level.isPassable(newTileX, newTileY)) return false;
+            // Collision detected!
+            return true;
         }
+
+        // Looks like there wasn't anything to collide with.  No action taken.
+        return false;
+
+    };
+
+    Entity.prototype.move = function (direction, skipAnimation) {
+        var newTileX = this.tile.x + direction.x,
+            newTileY = this.tile.y + direction.y,
+            newTile = this.level.getTile(newTileX, newTileY);
+
+        // New tile doesn't exist.  Abort!
+        if(!newTile) {
+            return false;
+        }
+
+        // If this entity is impassable, let's do some collision detection.
+        if(!this.tags.passable && this.handleObjectCollision(newTile)) {
+            return true;
+        }
+
+        // We can't move there if the player is already there.
+        if(game.level.containsPlayer(newTile.x, newTile.y)) return false;
+        
+        // Do not continue if terrain impassable.
+        if(!this.level.isPassable(newTile.x, newTile.y)) return false;
 
         var oldTile = this.tile,
             oldTileX = this.tile.x,
             oldTileY = this.tile.y,
             oldX = this.x,
-            oldY = this.y,
-            newTile = this.level.getTile(newTileX, newTileY);
+            oldY = this.y;
         
-        // Update tile reference (if the new tile exists).
-        if(!newTile) {
-            return false;
-        }
-
         // If I was on a tile previously, remove me from it.
         if(this.tile) this.tile.remove(this);
 
