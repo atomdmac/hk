@@ -261,6 +261,19 @@ define([
 
     };
 
+    // TRUE if a collision occured with terrain.
+    Entity.prototype.handleTerrainCollision = function (tile) {
+            // We can't move there if the player is already there.
+            if(game.level.containsPlayer(tile.x, tile.y)) return true;
+            
+            // Do not continue if terrain impassable.
+            if(!this.level.isPassable(tile.x, tile.y)) return true;
+
+            // No collision.
+            return false;
+    };
+
+    // TRUE if movement occured or action was taken.
     Entity.prototype.move = function (direction, skipAnimation) {
         var newTileX = this.tile.x + direction.x,
             newTileY = this.tile.y + direction.y,
@@ -272,15 +285,15 @@ define([
         }
 
         // If this entity is impassable, let's do some collision detection.
-        if(!this.tags.passable && this.handleObjectCollision(newTile)) {
-            return true;
+        if(!this.tags.passable) {
+            // If there's an object next to me, can I interact with it?
+            if (this.handleObjectCollision(newTile)) return true;
+
+            // If there's terrain next to me, do I collide with it?
+            else if (this.handleTerrainCollision(newTile)) return false;
+
         }
 
-        // We can't move there if the player is already there.
-        if(game.level.containsPlayer(newTile.x, newTile.y)) return false;
-        
-        // Do not continue if terrain impassable.
-        if(!this.level.isPassable(newTile.x, newTile.y)) return false;
 
         var oldTile = this.tile,
             oldTileX = this.tile.x,
