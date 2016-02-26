@@ -185,8 +185,13 @@ define([
         // Let listeners know that we got a boo-boo :(
         this.events.onDamage.dispatch(this, amount, attacker);
 
+        // TODO: For the love of JAZUS, clean up this damage tint code.
+        this.tint = 0xff0000;
+        var self = this;
+        setTimeout(function () { self.tint = 0xffffff; }, Settings.turnPause);
+
         // Put it in the log.
-        console.log(this.name, '[', this.health, '] takes ', amount, ' damage from ', attacker.name, '[', attacker.health, ']');
+        game.log.print(this.name, '[', this.health, '] takes ', amount, ' damage from ', attacker.name, '[', attacker.health, ']');
 
         // Did we die yet?
         if(this.health<=0) this.die();
@@ -197,7 +202,7 @@ define([
         this.events.onDie.dispatch(this);
 
         // Put it in the log.
-        console.log(this.name, ' dies.');
+        game.log.print(this.name, ' dies.');
         
         // Aaaaand die.
         this.kill();
@@ -222,11 +227,32 @@ define([
                 // If they are, do we want to fight them?
                 if(this.reactTo(monster) === 0) {
                     var toHitRoll = this.rollToHitMelee();
+
+                    // Attack animation.
+                    var newX = (monster.tile.x*Settings.map.tile.width)  - (this.tile.x*Settings.map.tile.width),
+                        newY = (monster.tile.y*Settings.map.tile.height) - (this.tile.y*Settings.map.tile.height);
+                    newX /= 4;
+                    newY /= 4;
+                    newX += (this.tile.x * Settings.map.tile.width);
+                    newY += (this.tile.y * Settings.map.tile.height);
+
+                    var hitAnim = game.add.tween(this);
+                    hitAnim.to(
+                        {
+                            x: newX,
+                            y: newY 
+                        }, Settings.turnPause/2, 'Linear', true, 0, 0, true
+                    );
+
+                    // Roll to hit.
                     if(!monster.defend(toHitRoll)) {
                         monster.takeDamage(this.rollForDamage(), this);
-                    } else {
+                    } 
+
+                    // Aw, I missed :()
+                    else {
                         this.combatFloater.miss();
-                        console.log(this.name, ' attacks ', monster.name, 'but misses.');
+                        game.log.print(this.name, ' attacks ', monster.name, 'but misses.');
                     }
                     return true;
                 } else {

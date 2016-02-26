@@ -4,7 +4,8 @@ define([
     'monster',
     'utilities/state-machine',
     'progress-bar',
-], function (Phaser, ROT, Monster, StateMachine, ProgressBar) { 
+    'utilities/dice'
+], function (Phaser, ROT, Monster, StateMachine, ProgressBar, Dice) { 
     'use strict';
 
     // Private vars.
@@ -20,25 +21,21 @@ define([
         this.tags.undead = true;
         this.tags.passable = false;
         
-        // Stats
-        this.health = 10;
-        this.maxHealth = this.health;
 
         // Abilities
-        this.abilities = {};
         this.abilities.strength     = 12;
-        this.abilities.dexterity    = 8;
+        this.abilities.dexterity    = 3;
         this.abilities.constitution = 0;
         this.abilities.intelligence = 0;
         this.abilities.wisdom       = 10;
         this.abilities.charisma     = 1;
+        this.abilities.speed        = 6;
 
         // Combat stats.
         this.stats.level   = 1;
         this.stats.hitDie  = '1d6';
         this.stats.baseDamage = '1d3';
-
-        // Derived stats.
+        this.stats.baseAttackBonus = 3;
 
         // Skills
 
@@ -75,11 +72,13 @@ define([
     // need time to animate actions.
     Undead.prototype.act = function () {
         // If I can see the player, chase them immediately!
-        if(this.canSee(game.player) && game.player.alive) this._quary = game.player;
+        if(game.player.fov.contains(this.tile.x, this.tile.y)/*this.canSee(game.player)*/ && game.player.alive) this._quary = game.player;
         // else, wander randomly.
         else if(Math.random() < 0.25) this._quary = this.level.getRandomPassable();
 
         this.moveToward(this._quary);
+
+        return Monster.prototype.act.call(this);
 
     };
 

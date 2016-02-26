@@ -2,6 +2,7 @@ define([
     'phaser',
     'rot',
     'settings',
+    'log',
     'entity',
     'monster',
     'player',
@@ -11,11 +12,23 @@ define([
     'progress-bar',
     'death-state',
     'utilities/state-machine'
-], function (Phaser, ROT, Settings, Entity, Monster, Player, Cursor, Level, FOV, ProgressBar, DeathState, StateMachine) { 
+], function (Phaser, ROT, Settings, Log, Entity, Monster, Player, Cursor, Level, FOV, ProgressBar, DeathState, StateMachine) { 
     'use strict';
 
     // Private vars.
-    var game, scheduler, player, cursor, healthBar, levels, currentLevelIndex, level, fov, keyTimer;
+    var game, 
+        log,
+        scheduler,
+        engine, 
+        player, 
+        cursor, 
+        healthBar,
+        levelText,
+        levels, 
+        currentLevelIndex, 
+        level, 
+        fov, 
+        keyTimer;
 
     function Game() {    
         console.log('Making the Game');    
@@ -29,6 +42,9 @@ define([
 
             game = this.game;
             keyTimer = 0;
+
+            // FOR DEBUGGINER
+            window.game = game;
 
             // Directions that a character can move.
             game.directions = {
@@ -58,6 +74,9 @@ define([
             // game.scale.setUserScale(2,2);
             // game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
 
+            // Create a place to record game events for user consumption.
+            game.log = new Log(game, 0, 0);
+
             // Add states.
             game.state.add('Death', DeathState);
 
@@ -70,11 +89,15 @@ define([
             // Set up scheduler for timing.
             game.scheduler = scheduler = new ROT.Scheduler.Speed();
 
+            // ...and the engine.
+            game.engine = engine = new ROT.Engine(scheduler);
+
             // Set up player.
             game.player     = player = new Player(game, 0, 0, 'player');
+            game.player.calculateStats();
 
             player.events.onDie.add(function () {
-                game.state.start('Death', true, false, {turns: scheduler.getTime()});
+                game.state.start('Death', true, false, {turns: scheduler.getTime(), level: currentLevelIndex + 1});
             });
 
             // Set up player Field of View
@@ -104,7 +127,7 @@ define([
 
 
             // Set up selection cursor.
-            game.cursor = cursor  = new Cursor(game, 0, 0, 'cursor');
+            game.cursor = cursor  = new Cursor(game, game.player);
 
             // Set up HUD.
             healthBar = new ProgressBar(game, 0, 0);
@@ -123,6 +146,12 @@ define([
             healthBar.fixedToCamera = true;
             healthBar.cameraOffset.x = 20;
             healthBar.cameraOffset.y = 20;
+
+            levelText = new Phaser.Text(game, 0, 0, 'Level: 1', {fill: 'white'});
+            levelText.fixedToCamera = true;
+            levelText.cameraOffset.x = 20;
+            levelText.cameraOffset.y = 60;
+
 
             // Keyboard Controls
             game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onDown.add(function () {
@@ -159,7 +188,9 @@ define([
                         var nextRound = false;
                         // Don't continue if action is already being taken.
                         if(keyTimer > game.time.now) { return; }
-
+                        if (game.engine._scheduler._current !== player) {
+                            return;
+                        }
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
                             nextRound = player.move(game.directions.W);
                         }
@@ -197,16 +228,18 @@ define([
 
                         // Advance world state.
                         if(nextRound) {
-                            keyTimer = game.time.now + Settings.turnPause;
                             fov.update(player.tile.x, player.tile.y, 10);
-                            if(level.monsters) {
-                                for(var i=0; i<game.level.monsters.length; i++) {
-                                    var m = game.scheduler.next();
-                                    if(m === player) return;
-                                    else m.act();
+                            engine.unlock();
+                            keyTimer = game.time.now + Settings.turnPause * 2;
+
+                            // if(level.monsters) {
+                            //     for(var i=0; i<game.level.monsters.length; i++) {
+                            //         var m = game.scheduler.next();
+                            //         if(m === player) return;
+                            //         else m.act();
                                     
-                                }
-                            }
+                            //     }
+                            // }
                         }
                     }
 
@@ -224,7 +257,7 @@ define([
                     'onExit': function () {
                         cursor.exists = false;
                         game.camera.unfollow();
-                        game.camera.follow(player);
+                        game.camera.follow(player, Phaser.Camera.FOLLOW_TOPDOWN);
                     },
                     'onKeyDown': function () {
                     },
@@ -258,7 +291,7 @@ define([
                             nextRound = cursor.move(game.directions.NE);
                         }
 
-                        else if(game.input.keyboard.isDown(Phaser.Keyboard.C) || game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
+                        else if(game.input.keyboard.isDown(Phaser.Keyboard.ESC) || game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
                             var door = level.containsDoor(cursor.tile.x, cursor.tile.y);
 
                             // If there is a door under the cursor, close it and
@@ -274,7 +307,7 @@ define([
                             nextRound = true;
                         }
 
-                        if(nextRound) keyTimer = game.time.now + Settings.turnPause;
+                        if(nextRound) keyTimer = game.time.now + Settings.turnPause * 2;
                     }
                 }
             };
@@ -296,6 +329,8 @@ define([
 
             // Load first level.
             this.goDown();
+
+            // Start scheduling engine.
         },
 
         update: function () {
@@ -322,15 +357,21 @@ define([
             // Set up player.
             player.bringToTop();
             player.setLevel(level);
-            game.camera.follow(player);
+            game.camera.follow(player, Phaser.Camera.FOLLOW_TOPDOWN);
+
 
             // Set up cursor.
             game.add.existing(cursor);
             cursor.setLevel(level);
+            cursor.exists = false;
 
             // Re-adjust HUD.
             game.add.existing(healthBar);
             healthBar.bringToTop();
+
+            game.add.existing(levelText);
+            levelText.text = 'Level: ' + Number(currentLevelIndex + 1);
+            levelText.bringToTop();
 
             // Debug
             console.log('Dungeon level: ', currentLevelIndex, ' :: ', level);
@@ -345,6 +386,7 @@ define([
                 this.switchToLevel(level);
                 player.teleport(level.downstairs.tile.x, level.downstairs.tile.y);
                 player.fov.update();
+                engine.start();
 
             }
         },
@@ -363,12 +405,16 @@ define([
                     Settings.map.tile.width, 
                     Settings.map.tile.height
                 );
+                level.events.onMonsterDie.add(function (monster) {
+                    scheduler.remove(monster);
+                });
                 levels.push(level);
                 currentLevelIndex = levels.length - 1;
                 this.switchToLevel(level);
             }
             player.teleport(level.upstairs.tile.x, level.upstairs.tile.y);
             player.fov.update();
+            engine.start();
         }
     };
     

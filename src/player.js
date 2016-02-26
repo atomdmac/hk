@@ -17,26 +17,21 @@ define([
         this.name = 'Player';
         this.tags.player = true;
 
-        // Stats
-        this.health = 20;
-        this.maxHealth = this.health;
-
         // Abilities
-        this.abilities = {};
         this.abilities.strength     = 10;
         this.abilities.dexterity    = 10;
         this.abilities.constitution = 10;
         this.abilities.intelligence = 10;
         this.abilities.wisdom       = 10;
         this.abilities.charisma     = 10;
+        this.abilities.speed        = 10;
 
         // Combat stats.
-        this.stats = {};
         this.stats.level   = 1;
-        this.stats.hitDie  = '1d6';
-        this.stats.baseDamage = '1d6';
+        this.stats.hitDie  = '1d12';
+        this.stats.baseDamage = '1d3';
+        this.stats.baseAttackBonus = 3;
 
-        // Derived stats.
 
         // Skills
 
@@ -55,6 +50,10 @@ define([
 
     Player.prototype = Object.create(Monster.prototype);
     Player.prototype.constructor = Player;
+
+    Player.prototype.act = function () {
+        game.engine.lock();
+    };
 
     return Player;
 });

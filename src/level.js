@@ -126,8 +126,16 @@ define([
             self.doors.add(door);
 
         };
+
+        // Generate items.
+        this.items = [];
+        var makeItem = function (room) {
+            console.log(room);
+            return {};
+        };
         for (var i=0; i<this.rooms.length; i++) {
             this.rooms[i].getDoors(makeDoor);
+            this.items.push(makeItem(this.rooms[i]));
         }
 
         // Generate upstairs.
@@ -147,11 +155,12 @@ define([
         // Generate monsters
         this.monsters = game.add.group();
         var curMonster, curSpawn;
-        for(var m=0; m<5; m++) {
+        for(var m=0; m<25; m++) {
         	curSpawn = this.getRandomPassable();
         	curMonster = new Undead(game, curSpawn.x, curSpawn.y, 'undead');
         	curMonster.setLevel(this);
-        	curMonster.teleport(curSpawn.x, curSpawn.y);
+            curMonster.calculateStats();
+        	console.log(curMonster.teleport(curSpawn.x, curSpawn.y));
         	// TODO: randomize actual monster types, not just visual appearence.
         	curMonster.frame = 1; // Math.round(Math.random() * 23);
             curMonster.events.onMove.add(this.handleEntityMove, this);
@@ -164,6 +173,13 @@ define([
         // Generate other dungeon features
 
         // Generate items
+        for(i=0; i<this.rooms.length; i++) {
+
+        }
+
+        // Set up listeners.
+        this.events = {};
+        this.events.onMonsterDie = new Phaser.Signal();
 
     }
 
@@ -273,7 +289,9 @@ define([
     };
 
     Level.prototype.handleMonsterDeath = function (monster) {
+        if(monster.tile) monster.tile.remove(monster);
         this.monsters.remove(monster);
+        this.events.onMonsterDie.dispatch(monster);
     };
 
     return Level;

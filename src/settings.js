@@ -5,13 +5,13 @@ define([
     'use strict';
 
     return {
-        turnPause: 150,
+        turnPause: 100,
         map: {
             width: 80,
             height: 40,
             tile: {
-                width: 16,
-                height: 16
+                width: 64,
+                height: 64
             }
         },
         stage: {

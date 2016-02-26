@@ -1,10 +1,11 @@
 define([
     'phaser',
     'rot',
+    'settings',
     'entity',
     'combat-floater',
     'utilities/dice'
-], function (Phaser, ROT, Entity, CombatFloater, Dice) { 
+], function (Phaser, ROT, Settings, Entity, CombatFloater, Dice) { 
     'use strict';
 
     // Private vars.
@@ -19,10 +20,6 @@ define([
         this.name = 'Monster';
         this.tags.monster = true;
         this.tags.passable = false;
-        
-        // Stats
-        this.health = 10;
-        this.maxHealth = this.health;
 
         // Abilities
         this.abilities = {};
@@ -32,14 +29,17 @@ define([
         this.abilities.intelligence = 10;
         this.abilities.wisdom       = 10;
         this.abilities.charisma     = 10;
+        this.abilities.speed        = 10;
 
         // Combat stats.
         this.stats = {};
         this.stats.level   = 1;
         this.stats.hitDie  = '1d6';
         this.stats.baseDamage = '1d3';
+        this.stats.baseAttackBonus = 0;
 
         // Derived stats.
+        this.calculateStats();
 
         // Skills
 
@@ -76,7 +76,14 @@ define([
 
     // Called by the game scheduler.  Should return a "thenable" promise if we
     // need time to animate actions.
-    Monster.prototype.act = function () {};
+    Monster.prototype.act = function () {
+        if(this.tile && !game.player.fov.contains(this.tile.x, this.tile.y)) {
+            return;
+        }
+        return {
+            then: function(cb) { setTimeout(cb, Settings.turnPause); }
+        };
+    };
 
     // Monster.prototype.kill = function () {};
 
@@ -87,14 +94,14 @@ define([
     Monster.prototype.travel = function (x, y) {};
 
     Monster.prototype.getSpeed = function () {
-        return this.abilities.dexterity;
+        return this.abilities.speed;
     };
 
     Monster.prototype.getArmorClass = function () {
         // TODO: Add armor bonus to AC.
         // TODO: Add shield bonus to AC.
         // TODO: Add size modifier to AC.
-        return 10 + this.getBaseAbilityMod('dexterity');
+        return this.getBaseAbilityMod('dexterity');
     };
 
     /*
@@ -110,7 +117,7 @@ define([
     };
 
     Monster.prototype.rollToHitMelee = function () {
-        return this.getBaseAbilityMod('strength') + Dice.roll('1d20');
+        return this.getBaseAbilityMod('strength') + Dice.roll('1d20') + this.stats.baseAttackBonus;
     };
 
     Monster.prototype.rollForDamage = function () {
@@ -118,7 +125,11 @@ define([
     };
 
     Monster.prototype.defend = function (targetNumber) {
-        return this.getArmorClass() + Dice.roll('1d20') > targetNumber;
+        var ac = this.getArmorClass() + Dice.roll('1d20');
+        game.log.print('ac: ', ac, ' tn: ', targetNumber);
+        return ac > targetNumber;
+
+        // return this.getArmorClass() + Dice.roll('1d20') > targetNumber;
     };
 
     Monster.prototype.takeDamage = function (amount, attacker) {
@@ -131,6 +142,15 @@ define([
     Monster.prototype.reactTo = function (target) {
         // Default is hostile
         return Monster.reactions.HOSTILE;
+    };
+
+    Monster.prototype.calculateStats = function () {
+        if(this.stats.level === 1) this.health = Dice.getSides(this.stats.hitDie);
+        for(var i=1; i<this.stats.level; i++) {
+            this.health += Dice.roll(this.stats.hitDie);
+        }
+        this.maxHealth = this.health;
+        game.log.print(this.name, ' has ', this.health);
     };
 
     return Monster;
