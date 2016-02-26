@@ -62,7 +62,7 @@ define([
         this.events.onUpdate.dispatch(this);
     };
 
-    FOV.prototype.canSee = function (x, y) {
+    FOV.prototype.contains = function (x, y) {
         if(this.current[x+'_'+y] !== undefined) return true;
         return false;
     };
