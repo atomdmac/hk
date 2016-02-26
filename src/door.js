@@ -62,7 +62,7 @@ define([
         // Can only close an open door...
         if(this.isOpen) {
             if(this.tile && this.tile.collides) {
-                console.log('You try to close the door but the way is blocked...');
+                game.log.print('You try to close the door but the way is blocked...');
                 return false;
             } else {
                 this.isOpen = false;
