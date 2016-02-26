@@ -168,29 +168,27 @@ define([
             this.input.states = {
                 'normal': {
                     'onKeyDown': function () {
-                        // Don't continue if action is already being taken.
-                        if(keyTimer > game.time.now) { return; }
+                        // // Don't continue if action is already being taken.
+                        // if(keyTimer > game.time.now || engine._scheduler._current === game.player) { return; }
 
-                        // Close
-                        else if (game.input.keyboard.isDown(Phaser.Keyboard.C)) {
-                            self.input.setState('close');
-                        }
+                        // // Close
+                        // else if (game.input.keyboard.isDown(Phaser.Keyboard.C)) {
+                        //     self.input.setState('close');
+                        // }
 
-                        else if (game.input.keyboard.isDown(Phaser.Keyboard.PERIOD)) {
-                            if(level.monsters) {
-                                level.monsters.forEach(function (monster) {
-                                    monster.act();
-                                });
-                            }
-                        }
+                        // else if (game.input.keyboard.isDown(Phaser.Keyboard.PERIOD)) {
+                        //     if(level.monsters) {
+                        //         level.monsters.forEach(function (monster) {
+                        //             monster.act();
+                        //         });
+                        //     }
+                        // }
                     },
                     'update': function () {
                         var nextRound = false;
                         // Don't continue if action is already being taken.
                         if(keyTimer > game.time.now) { return; }
-                        if (game.engine._scheduler._current !== player) {
-                            return;
-                        }
+
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
                             nextRound = player.move(game.directions.W);
                         }
@@ -231,15 +229,6 @@ define([
                             fov.update(player.tile.x, player.tile.y, 10);
                             engine.unlock();
                             keyTimer = game.time.now + Settings.turnPause * 2;
-
-                            // if(level.monsters) {
-                            //     for(var i=0; i<game.level.monsters.length; i++) {
-                            //         var m = game.scheduler.next();
-                            //         if(m === player) return;
-                            //         else m.act();
-                                    
-                            //     }
-                            // }
                         }
                     }
 
@@ -291,23 +280,32 @@ define([
                             nextRound = cursor.move(game.directions.NE);
                         }
 
-                        else if(game.input.keyboard.isDown(Phaser.Keyboard.ESC) || game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
+                        else if(game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
                             var door = level.containsDoor(cursor.tile.x, cursor.tile.y);
 
                             // If there is a door under the cursor, close it and
                             // recalculate the player's FOV.
-                            if(door) {
-                                door.close();
+                            if(door && door.close()) {
                                 player.fov.update();
+                                nextRound = true;
                             }
 
                             // Exit 'close door' mode.
                             self.input.setState('normal');
 
-                            nextRound = true;
                         }
 
-                        if(nextRound) keyTimer = game.time.now + Settings.turnPause * 2;
+                        // Cancel
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.ESC)) {
+                            self.input.setState('normal');
+                        }
+
+                        // Advance world state.
+                        if(nextRound) {
+                            fov.update(player.tile.x, player.tile.y, 10);
+                            engine.unlock();
+                            keyTimer = game.time.now + Settings.turnPause * 2;
+                        }
                     }
                 }
             };
