@@ -155,7 +155,7 @@ define([
         // Generate monsters
         this.monsters = game.add.group();
         var curMonster, curSpawn;
-        for(var m=0; m<25; m++) {
+        for(var m=0; m<15; m++) {
         	curSpawn = this.getRandomPassable();
         	curMonster = new Undead(game, curSpawn.x, curSpawn.y, 'undead');
         	curMonster.setLevel(this);
