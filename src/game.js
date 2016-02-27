@@ -187,7 +187,7 @@ define([
                     'update': function () {
                         var nextRound = false;
                         // Don't continue if action is already being taken.
-                        if(keyTimer > game.time.now) { return; }
+                        if(keyTimer > game.time.now || player.isActing) { return; }
 
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
                             nextRound = player.move(game.directions.W);
@@ -213,11 +213,18 @@ define([
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.U)) {
                             nextRound = player.move(game.directions.NE);
                         }
+                        
                         // Close
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.C)) {
                             keyTimer = game.time.now + Settings.turnPause;
                             self.input.setState('close');
                         }
+
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.F)) {
+                            keyTimer = game.time.now + Settings.turnPause;
+                            self.input.setState('fire');
+                        }
+
                         // Wait
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.PERIOD)) {
                             keyTimer = game.time.now + Settings.turnPause;
@@ -232,6 +239,50 @@ define([
                         }
                     }
 
+                },
+                'fire': {
+                    'onKeyDown': function () {
+                    },
+                    'update': function () {
+                        var nextRound = false;
+                        // Don't continue if action is already being taken.
+                        if(keyTimer > game.time.now) { return; }
+
+                        if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
+                            nextRound = player.fire(game.directions.W);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.L)) {
+                            nextRound = player.fire(game.directions.E);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.J)) {
+                            nextRound = player.fire(game.directions.S);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.B)) {
+                            nextRound = player.fire(game.directions.SW);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.N)) {
+                            nextRound = player.fire(game.directions.SE);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.K)) {
+                            nextRound = player.fire(game.directions.N);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.Y)) {
+                            nextRound = player.fire(game.directions.NW);
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.U)) {
+                            nextRound = player.fire(game.directions.NE);
+                        }
+
+                        // Cancel
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.ESC)) {
+                            self.input.setState('normal');
+                        }
+
+                        if(nextRound) {
+                            keyTimer = game.time.now + Settings.turnPause;
+                            self.input.setState('normal');
+                        }
+                    }
                 },
                 'close': {
                     'onEnter': function () {

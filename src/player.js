@@ -1,8 +1,9 @@
 define([
     'phaser',
     'rot',
-    'monster'
-], function (Phaser, ROT, Monster) { 
+    'monster',
+    'bullet'
+], function (Phaser, ROT, Monster, Bullet) { 
     'use strict';
 
     // Private vars.
@@ -46,6 +47,10 @@ define([
         // Inventory
         this.inventory = [];
 
+        // Set to TRUE when the player has provided input and an action is pending
+        // (like a bullet flying through the air).
+        this.isActing = false;
+
     }
 
     Player.prototype = Object.create(Monster.prototype);
@@ -53,6 +58,23 @@ define([
 
     Player.prototype.act = function () {
         game.engine.lock();
+    };
+
+    Player.prototype.fire = function (tile) {
+        this.isActing = true;
+        var bullet = new Bullet(game, this.x, this.y, 'player');
+        bullet.setLevel(this.level);
+        bullet.teleport(this.tile.x, this.tile.y);
+        game.add.existing(bullet);
+
+        var self = this;
+        bullet.events.onKilled.add(function () {
+            self.isActing = false;
+        });
+
+
+        bullet.fire(tile);
+        return true;
     };
 
     return Player;
