@@ -60,20 +60,23 @@ define([
         game.engine.lock();
     };
 
-    Player.prototype.fire = function (tile) {
+    Player.prototype.fire = function (direction) {
         this.isActing = true;
-        var bullet = new Bullet(game, this.x, this.y, 'player');
+
+        // Create the bullet and place it in the game world.
+        var bullet = new Bullet(game, this.x, this.y, 'bullet');
         bullet.setLevel(this.level);
         bullet.teleport(this.tile.x, this.tile.y);
         game.add.existing(bullet);
 
+        // When the bullet is removed from the map, the player's turn is over.
         var self = this;
         bullet.events.onKilled.add(function () {
             self.isActing = false;
         });
 
 
-        bullet.fire(tile);
+        bullet.fire(direction);
         return true;
     };
 

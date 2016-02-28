@@ -31,41 +31,15 @@ define([
     };
 
     Bullet.prototype.fire = function (direction) {
-        var nextPos = new Phaser.Point(this.tile.x + direction.x, this.tile.y + direction.y),
-            tween   = game.add.tween(this),
+        var tween   = game.add.tween(this),
             self    = this;
-        this.moveToward(nextPos);
+
+        this.move(direction);
+        
         if(!this.movementTween) return;
         this.movementTween.onComplete.add(function () {
             if(self.alive) self.fire(direction);
         });
-    };
-
-    Bullet.prototype.moveToward = function (target) {
-        var targetPos = new Phaser.Point(),
-            slope = new Phaser.Point(),
-            targetDir = new Phaser.Point();
-        // Given coords instead of target object.
-        if(arguments.length > 1) {
-            targetPos.x = arguments[0];
-            targetPos.y = arguments[1];
-        } else {
-            // Attempt to use tile property if available.
-            targetPos.x = target.tile ? target.tile.x : target.x;
-            targetPos.y = target.tile ? target.tile.y : target.y;
-        }
-
-        // Calculate slope.
-        Phaser.Point.subtract(targetPos, this.tile, slope);
-        Phaser.Point.normalize(slope, slope);
-
-        targetDir.x = Math.round(slope.x);
-        targetDir.y = Math.round(slope.y);
-
-        var hasMoved;
-
-        // Attempt to move to next position.
-        this.move(targetDir);
     };
 
     // Return TRUE if an action was taken as a result of a collision.
