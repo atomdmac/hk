@@ -4,8 +4,10 @@ define([
     'dungeon-tile',
     'entity',
     'undead',
-    'door'
-], function (Phaser, ROT, DungeonTile, Entity, Undead, Door) { 
+    'door',
+    'health',
+    'ammo'
+], function (Phaser, ROT, DungeonTile, Entity, Undead, Door, Health, Ammo) { 
     'use strict';
 
     // Private vars.
@@ -27,7 +29,7 @@ define([
 
         // GROOOOOOOSSSS!!!
         this.tilemap.putTile = function (tile, x, y, layer) {
-        	 if (tile === null){
+        	if (tile === null){
 	            return this.removeTile(x, y, layer);
 	        }
 
@@ -130,7 +132,6 @@ define([
         // Generate items.
         this.items = [];
         var makeItem = function (room) {
-            console.log(room);
             return {};
         };
         for (var i=0; i<this.rooms.length; i++) {
@@ -139,14 +140,41 @@ define([
         }
 
         // Generate upstairs.
-        var upstairs = this.getRandomPassable();
+        var upstairsRoom = window.upstairsRoom = this.getRandomRoom(),
+            upstairs     = this.getRandomPassable();
         this.upstairs = new Entity(game, upstairs.x, upstairs.y, 'dungeon');
         this.upstairs.setLevel(this);
         this.upstairs.teleport(upstairs.x, upstairs.y);
         this.upstairs.frame = 4;
 
+        // Generate other dungeon features
+
+        // Generate items
+        this.items = game.add.group();
+        var curItem;
+        for(i=0; i<2; i++) {
+            curSpawn = this.getRandomPassable();
+
+            curItem = new Health(game, curSpawn.x, curSpawn.y);
+            curItem.setLevel(this);
+            curItem.teleport(curSpawn.x, curSpawn.y);
+
+            this.items.addChild(curItem);
+        }
+
+        for(i=0; i<2; i++) {
+            curSpawn = this.getRandomPassable();
+
+            curItem = new Ammo(game, curSpawn.x, curSpawn.y);
+            curItem.setLevel(this);
+            curItem.teleport(curSpawn.x, curSpawn.y);
+
+            this.items.addChild(curItem);
+        }
+
         // Generate downstairs
-        var downstairs = this.getRandomPassable();
+        var downstairsRoom = this.getRandomRoom(upstairsRoom),
+            downstairs     = this.getRandomPassable(downstairsRoom);
         this.downstairs = new Entity(game, downstairs.x, downstairs.y, 'dungeon');
         this.downstairs.setLevel(this);
         this.downstairs.teleport(downstairs.x, downstairs.y);
@@ -154,27 +182,22 @@ define([
 
         // Generate monsters
         this.monsters = game.add.group();
-        var curMonster, curSpawn;
-        for(var m=0; m<15; m++) {
-        	curSpawn = this.getRandomPassable();
-        	curMonster = new Undead(game, curSpawn.x, curSpawn.y, 'undead');
-        	curMonster.setLevel(this);
+        var curMonster, curSpawn, curRoom;
+        for(var m=0; m<10; m++) {
+            curRoom = this.getRandomRoom(upstairsRoom);
+            curSpawn = this.getRandomPassable(curRoom);
+
+            curMonster = new Undead(game, curSpawn.x, curSpawn.y, 'undead');
+            curMonster.setLevel(this);
+            curMonster.teleport(curSpawn.x, curSpawn.y);
             curMonster.calculateStats();
-        	console.log(curMonster.teleport(curSpawn.x, curSpawn.y));
-        	// TODO: randomize actual monster types, not just visual appearence.
-        	curMonster.frame = 1; // Math.round(Math.random() * 23);
+
+            // TODO: randomize actual monster types, not just visual appearence.
+            curMonster.frame = 1; // Math.round(Math.random() * 23);
             curMonster.events.onMove.add(this.handleEntityMove, this);
             curMonster.events.onKilled.add(this.handleMonsterDeath, this);
 
-
-
-        	this.monsters.addChild(curMonster);
-        }
-        // Generate other dungeon features
-
-        // Generate items
-        for(i=0; i<this.rooms.length; i++) {
-
+            this.monsters.addChild(curMonster);
         }
 
         // Set up listeners.
@@ -216,18 +239,37 @@ define([
         game.add.existing(this.downstairs);
         game.add.existing(this.upstairs);
 
+        game.add.existing(this.items);
+
         game.add.existing(this.doors);
 
         game.add.existing(this.monsters);
+
     };
 
-    Level.prototype.getRandomPassable = function () {
-        var room = new Phaser.ArrayUtils.getRandomItem(this.rooms);
-        return this.tilemap.getTile(
-            getRandomInt(room.getRight(), room.getLeft()), 
-            getRandomInt(room.getBottom(), room.getTop()),
-            this.terrain
-        );
+    Level.prototype.getRandomRoom = function (excludeRoom) {
+        var room = excludeRoom, tries = 0;
+        while(room === excludeRoom && tries < 50) {
+            tries++;
+            room = new Phaser.ArrayUtils.getRandomItem(this.rooms);
+        }
+        return room;
+    };
+
+    Level.prototype.getRandomPassable = function (inRoom) {
+        var room = inRoom || new Phaser.ArrayUtils.getRandomItem(this.rooms),
+            pos  = null;
+
+        while(pos === null) {
+            pos = this.tilemap.getTile(
+                getRandomInt(room.getRight(), room.getLeft()), 
+                getRandomInt(room.getBottom(), room.getTop()),
+                this.terrain
+            );
+            if(!this.isPassable(pos.x, pos.y)) pos = null;
+        }
+
+        return pos;
     };
 
     Level.prototype.isPassable = function (x, y) {
@@ -286,6 +328,17 @@ define([
     		}
     	}
 		return false;
+    };
+
+    Level.prototype.containsItem = function (x, y) {
+        // Check items
+        for(var item=null, d=0; d<this.items.length; d++) {
+            item = this.items.getAt(d);
+            if(item.tile.x === x && item.tile.y === y) {
+                return item;
+            }
+        }
+        return false;
     };
 
     Level.prototype.handleMonsterDeath = function (monster) {

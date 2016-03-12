@@ -5,13 +5,17 @@ define([
     'use strict';
 
     return {
-        turnPause: 100,
+        turnPause: 175,
+        time: {
+            // A speed constant that grants instant priority in the scheduler.
+            instant: 999999999
+        },
         map: {
             width: 80,
             height: 40,
             tile: {
-                width: 64,
-                height: 64
+                width: 32,
+                height: 32
             }
         },
         stage: {

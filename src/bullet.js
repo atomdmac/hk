@@ -1,25 +1,25 @@
 define([
     'phaser',
     'rot',
+    'settings',
     'monster'
-], function (Phaser, ROT, Monster) { 
+], function (Phaser, ROT, Settings, Monster) { 
     'use strict';
 
     // Private vars.
     var game;
 
-    function Bullet (_game, x, y, key, owner) {    
+    function Bullet (_game, x, y, key) {    
         game = _game;
 
         Monster.call(this, game, x, y, key);
 
         // Identifying information
         this.name = 'Bullet';
-        this.tags.Bullet = true;
+
+        this.movementTweenDuration = 50;
 
         this.bringToTop();
-
-        this.owner = owner;
 
     }
 
@@ -28,6 +28,11 @@ define([
 
     Bullet.prototype.act = function () {
         game.engine.lock();
+    };
+
+    // A bullet gets instant priority over all other Actors.
+    Bullet.prototype.getSpeed = function () {
+        return Settings.time.instant;
     };
 
     Bullet.prototype.fire = function (direction) {

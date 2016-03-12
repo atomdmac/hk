@@ -22,6 +22,7 @@ define([
 
         // Movement tween.
         this.movementTween = null;
+        this.movementTweenDuration = null;
 
         // Identifying information
         this.name = 'Entity';
@@ -53,9 +54,11 @@ define([
         this.events.onTeleport = new Phaser.Signal();
         this.events.onAttack = new Phaser.Signal();
         this.events.onDamage = new Phaser.Signal();
+        this.events.onHeal = new Phaser.Signal();
         this.events.onDie = new Phaser.Signal();
         this.events.onSee = new Phaser.Signal();
         this.events.onUnsee = new Phaser.Signal();
+        this.events.onSpawnChild = new Phaser.Signal();
     }
 
     Entity.prototype = Object.create(Phaser.Sprite.prototype);
@@ -110,16 +113,21 @@ define([
     Entity.prototype.moveToward = function (target) {
         var targetPos = new Phaser.Point(),
             slope = new Phaser.Point(),
-            targetDir = new Phaser.Point();
+            targetDir = new Phaser.Point(),
+            skipAnimation;
         // Given coords instead of target object.
-        if(arguments.length > 1) {
+        if(typeof arguments[0] === 'number') {
             targetPos.x = arguments[0];
             targetPos.y = arguments[1];
+            skipAnimation = arguments[2];
         } else {
             // Attempt to use tile property if available.
             targetPos.x = target.tile ? target.tile.x : target.x;
             targetPos.y = target.tile ? target.tile.y : target.y;
+            skipAnimation = arguments[1];
         }
+
+        skipAnimation = false;
 
         // Calculate slope.
         Phaser.Point.subtract(targetPos, this.tile, slope);
@@ -131,43 +139,43 @@ define([
         var hasMoved;
 
         // Attempt to move to next position.
-        hasMoved = this.move(targetDir);
+        hasMoved = this.move(targetDir, skipAnimation);
 
         // If we couldn't move to our ideal spot, let's find the next best thing.
         // Let's try moving horizontally first.
         if(!hasMoved && slope.x) {
             targetDir.x = Phaser.Math.sign(slope.x);
             targetDir.y = 0;
-            hasMoved = this.move(targetDir);
+            hasMoved = this.move(targetDir, skipAnimation);
         }
 
         // Failing that, let's try vertically.
         if(!hasMoved && slope.y) {
             targetDir.x = 0;
             targetDir.y = Phaser.Math.sign(slope.y);
-            hasMoved = this.move(targetDir);
+            hasMoved = this.move(targetDir, skipAnimation);
         }
 
         // What about diagonally?
         if(!hasMoved && !slope.x) {
             targetDir.x = 1;
             targetDir.y = Phaser.Math.sign(slope.y);
-            hasMoved = this.move(targetDir);
+            hasMoved = this.move(targetDir, skipAnimation);
         }
         if(!hasMoved && !slope.x) {
             targetDir.x = -1;
             targetDir.y = Phaser.Math.sign(slope.y);
-            hasMoved = this.move(targetDir);
+            hasMoved = this.move(targetDir, skipAnimation);
         }
         if(!hasMoved && !slope.y) {
             targetDir.x = Phaser.Math.sign(slope.x);
             targetDir.y = 1;
-            hasMoved = this.move(targetDir);
+            hasMoved = this.move(targetDir, skipAnimation);
         }
         if(!hasMoved && !slope.y) {
             targetDir.x = Phaser.Math.sign(slope.x);
             targetDir.y = -1;
-            hasMoved = this.move(targetDir);
+            hasMoved = this.move(targetDir, skipAnimation);
         }
     };
     
@@ -176,6 +184,20 @@ define([
     Entity.prototype.defend = function (victim) {
         // Always fail for now.
         return false;
+    };
+
+    Entity.prototype.heal = function (amount, source) {
+        // Can't heal any more, captain!
+        if(this.health === this.maxHealth) {
+            game.log.print(this.name, 'is already fully healed.');
+            return false;
+        }
+
+        this.health += amount;
+        if(this.health > this.maxHealth) this.health = this.maxHealth;
+        game.log.print(this.name, 'is healed for', amount, ' resulting in', this.health, '/', this.maxHealth, 'by', source.name);
+        this.events.onHeal.dispatch(this, amount, source);
+        return true;
     };
 
     Entity.prototype.takeDamage = function (amount, attacker) {
@@ -313,7 +335,7 @@ define([
             this.movementTween.to({
                 x: (this.tile.x * this.level.tileWidth),
                 y: (this.tile.y * this.level.tileHeight)
-            }, Settings.turnPause, null, true);
+            }, this.movementTweenDuration || Settings.turnPause, null, true);
         } else {
             this.x += (direction.x * this.level.tileWidth);
             this.y += (direction.y * this.level.tileHeight);

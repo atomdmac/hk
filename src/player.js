@@ -2,8 +2,9 @@ define([
     'phaser',
     'rot',
     'monster',
+    'gun',
     'bullet'
-], function (Phaser, ROT, Monster, Bullet) { 
+], function (Phaser, ROT, Monster, Gun, Bullet) { 
     'use strict';
 
     // Private vars.
@@ -47,6 +48,11 @@ define([
         // Inventory
         this.inventory = [];
 
+        // DEBUG: Start with a gun.
+        var gun = new Gun(game, 0, 0, null, this);
+        gun.pickup(this);
+        this.equip(gun, 'rightHand');
+
         // Set to TRUE when the player has provided input and an action is pending
         // (like a bullet flying through the air).
         this.isActing = false;
@@ -60,24 +66,33 @@ define([
         game.engine.lock();
     };
 
+    Player.prototype.move = function (direction, skipAnimation) {
+        var newTileX = this.tile.x + direction.x,
+            newTileY = this.tile.y + direction.y;
+
+        var item = this.level.containsItem(newTileX, newTileY);
+        if(item) item.use(this);
+        return Monster.prototype.move.call(this, direction, skipAnimation);
+    };
+
+    Player.prototype.equip = function (item, slot) {
+        if(this.equipment[slot] === undefined) return false;
+        this.equipment[slot] = item;
+    };
+
+    Player.prototype.reload = function () {
+        return this.equipment.rightHand.reload();
+    };
+
     Player.prototype.fire = function (direction) {
-        this.isActing = true;
 
-        // Create the bullet and place it in the game world.
-        var bullet = new Bullet(game, this.x, this.y, 'bullet');
-        bullet.setLevel(this.level);
-        bullet.teleport(this.tile.x, this.tile.y);
-        game.add.existing(bullet);
+        // TODO: Don't assume projecttile weapon is equiped.
+        var result = this.equipment.rightHand.fire(direction);
 
-        // When the bullet is removed from the map, the player's turn is over.
-        var self = this;
-        bullet.events.onKilled.add(function () {
-            self.isActing = false;
-        });
+        // If weapon used successfully, release engine lock.
+        if(result) game.engine.unlock();
 
-
-        bullet.fire(direction);
-        return true;
+        return result;
     };
 
     return Player;
