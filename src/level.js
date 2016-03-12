@@ -1,11 +1,12 @@
 define([
     'phaser',
     'rot',
+    'settings',
     'dungeon-tile',
     'entity',
     'undead',
     'door'
-], function (Phaser, ROT, DungeonTile, Entity, Undead, Door) { 
+], function (Phaser, ROT, Settings, DungeonTile, Entity, Undead, Door) { 
     'use strict';
 
     // Private vars.
@@ -92,16 +93,36 @@ define([
         // ROT.RNG.setSeed(1);
 
         // Generate terrain.
-        var mapDigger = new ROT.Map.Digger();
-        mapDigger.create(function (x, y, type) {
-            var tile = new DungeonTile(self.terrain, type, x, y, tileWidth, tileHeight);
-            tile.hide();
-            self.tilemap.putTile(tile, x, y, self.terrain);
-        });
+        this.passableTiles = [];
+        var mapCellular = new ROT.Map.Cellular(Settings.map.width, Settings.map.height);
+        mapCellular.randomize(0.55);
+        for(var cint=0; cint<10; cint++) mapCellular.create();
 
-        // Generate doors.
-        this.rooms = mapDigger.getRooms();
-        this.doors = game.add.group();
+        mapCellular.connect(function (x, y, type) {
+            // All edges are impassable.
+            if(x <= 0 || x >= Settings.map.width-1) type = 1;
+            if(y <= 0 || y >= Settings.map.height-1) type = 1;
+
+            // Create a tile for this location.
+            var tile = new DungeonTile(self.terrain, type, x, y, tileWidth, tileHeight);
+            //stile.hide();
+
+            // Keep a cache of passable tiles.
+            if(type === 0) self.passableTiles.push(tile);
+
+            self.tilemap.putTile(tile, x, y, self.terrain);
+        }, 0);
+
+        // var mapDigger = new ROT.Map.Digger();
+        // mapDigger.create(function (x, y, type) {
+        //     var tile = new DungeonTile(self.terrain, type, x, y, tileWidth, tileHeight);
+        //     tile.hide();
+        //     self.tilemap.putTile(tile, x, y, self.terrain);
+        // });
+
+        // // Generate doors.
+        // this.rooms = mapDigger.getRooms();
+        // this.doors = game.add.group();
 
         var makeDoor = function (x, y) {
             // Random chance that door will not be generated.
@@ -128,15 +149,15 @@ define([
         };
 
         // Generate items.
-        this.items = [];
-        var makeItem = function (room) {
-            console.log(room);
-            return {};
-        };
-        for (var i=0; i<this.rooms.length; i++) {
-            this.rooms[i].getDoors(makeDoor);
-            this.items.push(makeItem(this.rooms[i]));
-        }
+        // this.items = [];
+        // var makeItem = function (room) {
+        //     console.log(room);
+        //     return {};
+        // };
+        // for (var i=0; i<this.rooms.length; i++) {
+        //     this.rooms[i].getDoors(makeDoor);
+        //     this.items.push(makeItem(this.rooms[i]));
+        // }
 
         // Generate upstairs.
         var upstairs = this.getRandomPassable();
@@ -155,12 +176,12 @@ define([
         // Generate monsters
         this.monsters = game.add.group();
         var curMonster, curSpawn;
-        for(var m=0; m<15; m++) {
+        for(var m=0; m<0; m++) {
         	curSpawn = this.getRandomPassable();
         	curMonster = new Undead(game, curSpawn.x, curSpawn.y, 'undead');
         	curMonster.setLevel(this);
             curMonster.calculateStats();
-        	console.log(curMonster.teleport(curSpawn.x, curSpawn.y));
+        	curMonster.teleport(curSpawn.x, curSpawn.y);
         	// TODO: randomize actual monster types, not just visual appearence.
         	curMonster.frame = 1; // Math.round(Math.random() * 23);
             curMonster.events.onMove.add(this.handleEntityMove, this);
@@ -173,9 +194,9 @@ define([
         // Generate other dungeon features
 
         // Generate items
-        for(i=0; i<this.rooms.length; i++) {
+        // for(i=0; i<this.rooms.length; i++) {
 
-        }
+        // }
 
         // Set up listeners.
         this.events = {};
@@ -216,18 +237,21 @@ define([
         game.add.existing(this.downstairs);
         game.add.existing(this.upstairs);
 
-        game.add.existing(this.doors);
+        // game.add.existing(this.doors);
 
         game.add.existing(this.monsters);
     };
 
     Level.prototype.getRandomPassable = function () {
-        var room = new Phaser.ArrayUtils.getRandomItem(this.rooms);
-        return this.tilemap.getTile(
-            getRandomInt(room.getRight(), room.getLeft()), 
-            getRandomInt(room.getBottom(), room.getTop()),
-            this.terrain
-        );
+        // var room = new Phaser.ArrayUtils.getRandomItem(this.rooms);
+        // return this.tilemap.getTile(
+        //     getRandomInt(room.getRight(), room.getLeft()), 
+        //     getRandomInt(room.getBottom(), room.getTop()),
+        //     this.terrain
+        // );
+        var tile = Phaser.ArrayUtils.getRandomItem(this.passableTiles);
+        console.log('random tile: ', tile);
+        return tile;
     };
 
     Level.prototype.isPassable = function (x, y) {
@@ -278,6 +302,7 @@ define([
     };
 
     Level.prototype.containsDoor = function (x, y) {
+        return false;
     	// Check doors
     	for(var door=null, d=0; d<this.doors.length; d++) {
     		door = this.doors.getAt(d);

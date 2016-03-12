@@ -18,7 +18,7 @@
     "tests"
   ],
   "dependencies": {
-    "rot.js": "~0.5.0",
+    "rot.js": "master",
     "phaser": "~2.4.3",
     "requirejs": "~2.1.20"
   },

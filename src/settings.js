@@ -10,8 +10,8 @@ define([
             width: 80,
             height: 40,
             tile: {
-                width: 64,
-                height: 64
+                width: 16,
+                height: 16
             }
         },
         stage: {

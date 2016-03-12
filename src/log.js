@@ -22,7 +22,7 @@ define([
 
     Log.prototype.print = function () {
         // Print to console.
-        console.log.apply(console, arguments);
+        // console.log.apply(console, arguments);
         // TODO: Provide in-game log UI :P
     };
 
