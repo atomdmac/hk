@@ -93,25 +93,49 @@ define([
         // ROT.RNG.setSeed(1);
 
         // Generate terrain.
-        this.passableTiles = [];
+        // Fill in outsides
+        // var mapArea = new ROT.Map.Arena(Settings.map.width, Settings.map.height);
         var mapCellular = new ROT.Map.Cellular(Settings.map.width, Settings.map.height);
+        // mapArea.create(function (x, y, type) {
+        //     if(type === 1) {
+        //         var tile = new DungeonTile(self.terrain, type, x, y, tileWidth, tileHeight);
+        //         self.tilemap.putTile(tile, x, y, self.terrain);
+        //         mapCellular.set(x, y, 1);
+        //     }
+        // });
+
+
+        this.passableTiles = [];
         mapCellular.randomize(0.55);
-        for(var cint=0; cint<10; cint++) mapCellular.create();
+        for(var cint=0; cint<20; cint++) {
+            mapCellular.create(function (x, y, type) {
+                // All edges are impassable.
+                if(x <= 0 || x >= Settings.map.width-1) mapCellular.set(x, y, 1);
+                if(y <= 0 || y >= Settings.map.height-1) mapCellular.set(x, y, 1);
+            });
+        }
 
         mapCellular.connect(function (x, y, type) {
-            // All edges are impassable.
-            if(x <= 0 || x >= Settings.map.width-1) type = 1;
-            if(y <= 0 || y >= Settings.map.height-1) type = 1;
-
             // Create a tile for this location.
             var tile = new DungeonTile(self.terrain, type, x, y, tileWidth, tileHeight);
-            //stile.hide();
+            // tile.hide();
 
             // Keep a cache of passable tiles.
             if(type === 0) self.passableTiles.push(tile);
 
             self.tilemap.putTile(tile, x, y, self.terrain);
         }, 0);
+
+        // Find walls.
+        (function () {
+            for(var x=0; x<Settings.map.width; x++) {
+                for(var y=0; y<Settings.map.height; y++) {
+                    if(self.hasPassableNeighbor(x, y)) {
+                        self.getTile(x, y).type = 2;
+                    }
+                }
+            }
+        })();
 
         // var mapDigger = new ROT.Map.Digger();
         // mapDigger.create(function (x, y, type) {
@@ -269,16 +293,28 @@ define([
     Level.prototype.getSurrounding = function (x, y, output) {
     	output = output || {};
 
-    	output.N = this.getTile(x + game.direction.N, y + game.direction.N);
-    	output.NE = this.getTile(x + game.direction.NE, y + game.direction.NE);
-    	output.E = this.getTile(x + game.direction.E, y + game.direction.E);
-    	output.SE = this.getTile(x + game.direction.SE, y + game.direction.SE);
-    	output.S = this.getTile(x + game.direction.S, y + game.direction.S);
-    	output.SW = this.getTile(x + game.direction.SW, y + game.direction.SW);
-    	output.W = this.getTile(x + game.direction.W, y + game.direction.W);
-    	output.NW = this.getTile(x + game.direction.NW, y + game.direction.NW);
+    	output.N = this.getTile(x + game.directions.N.x, y + game.directions.N.y);
+    	output.NE = this.getTile(x + game.directions.NE.x, y + game.directions.NE.y);
+    	output.E = this.getTile(x + game.directions.E.x, y + game.directions.E.y);
+    	output.SE = this.getTile(x + game.directions.SE.x, y + game.directions.SE.y);
+    	output.S = this.getTile(x + game.directions.S.x, y + game.directions.S.y);
+    	output.SW = this.getTile(x + game.directions.SW.x, y + game.directions.SW.y);
+    	output.W = this.getTile(x + game.directions.W.x, y + game.directions.W.y);
+    	output.NW = this.getTile(x + game.directions.NW.x, y + game.directions.NW.y);
 
     	return output;
+    };
+
+    Level.prototype.hasPassableNeighbor = function (x, y) {
+        var neighbors = this.getSurrounding(x, y),
+            curTile;
+        for(var n in neighbors) {
+            if(neighbors.hasOwnProperty(n) && neighbors[n] != null) {
+                curTile = neighbors[n];
+                if(this.isPassable(curTile.x, curTile.y)) return true;
+            }
+        }
+        return false;
     };
 
     Level.prototype.getVisibleAt = function (x, y, callback) {};
