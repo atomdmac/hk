@@ -24,6 +24,7 @@ define([
         cursor, 
         healthBar,
         levelText,
+        ammoText,
         levels, 
         currentLevelIndex, 
         level, 
@@ -66,6 +67,9 @@ define([
             game.load.spritesheet('dungeon', 'assets/sprites/dungeon-debug.png', Settings.map.tile.width, Settings.map.tile.height, 6);
             game.load.image('player', 'assets/sprites/player-debug.png', Settings.map.tile.width, Settings.map.tile.height);
             game.load.image('cursor', 'assets/sprites/cursor-debug.png', Settings.map.tile.width, Settings.map.tile.height);
+            game.load.image('bullet', 'assets/sprites/bullet.png', Settings.map.tile.width, Settings.map.tile.height);
+            game.load.image('ammo', 'assets/sprites/ammo.png', Settings.map.tile.width, Settings.map.tile.height);
+            game.load.image('health', 'assets/sprites/health.png', Settings.map.tile.width, Settings.map.tile.height);
 
         },
         
@@ -130,13 +134,15 @@ define([
             game.cursor = cursor  = new Cursor(game, game.player);
 
             // Set up HUD.
-            healthBar = new ProgressBar(game, 0, 0);
-            game.add.existing(healthBar);
-            game.player.events.onDamage.add(function (target, amount, attacker) {
+            var updateHealth = function (target, amount, attacker) {
                 healthBar.setMin(0);
                 healthBar.setMax(target.maxHealth);
                 healthBar.setProgress(target.health);
-            });
+            };
+            healthBar = new ProgressBar(game, 0, 0);
+            game.add.existing(healthBar);
+            game.player.events.onDamage.add(updateHealth);
+            game.player.events.onHeal.add(updateHealth);
 
             healthBar.setMin(0);
             healthBar.setMax(player.maxHealth);
@@ -151,6 +157,11 @@ define([
             levelText.fixedToCamera = true;
             levelText.cameraOffset.x = 20;
             levelText.cameraOffset.y = 60;
+
+            ammoText = new Phaser.Text(game, 0, 0, '0/0/0', {fill: 'white'});
+            ammoText.fixedToCamera = true;
+            ammoText.cameraOffset.x = 20;
+            ammoText.cameraOffset.y = 100;
 
 
             // Keyboard Controls
@@ -187,7 +198,7 @@ define([
                     'update': function () {
                         var nextRound = false;
                         // Don't continue if action is already being taken.
-                        if(keyTimer > game.time.now) { return; }
+                        if(keyTimer > game.time.now || game.scheduler._current !== game.player) { return; }
 
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
                             nextRound = player.move(game.directions.W);
@@ -213,11 +224,30 @@ define([
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.U)) {
                             nextRound = player.move(game.directions.NE);
                         }
+                        
                         // Close
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.C)) {
                             keyTimer = game.time.now + Settings.turnPause;
                             self.input.setState('close');
                         }
+
+                        // Fire gun
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.F)) {
+                            keyTimer = game.time.now + Settings.turnPause;
+                            self.input.setState('fire');
+                        }
+
+                        // Reload gun
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.R)) {
+                            game.player.reload();
+                            keyTimer = game.time.now + Settings.turnPause;
+                            nextRound = true;
+
+                            // GROSS.
+                            var gun = game.player.equipment.rightHand;
+                            ammoText.text = (gun.currentClip + '/' + gun.clipSize + '/' + gun.totalAmmo);
+                        }
+
                         // Wait
                         else if (game.input.keyboard.isDown(Phaser.Keyboard.PERIOD)) {
                             keyTimer = game.time.now + Settings.turnPause;
@@ -228,10 +258,66 @@ define([
                         if(nextRound) {
                             fov.update(player.tile.x, player.tile.y, 10);
                             engine.unlock();
-                            keyTimer = game.time.now + Settings.turnPause * 2;
+                            keyTimer = game.time.now + Settings.turnPause;
                         }
                     }
 
+                },
+                'fire': {
+                    'onKeyDown': function () {
+                    },
+                    'update': function () {
+                        var nextRound = false;
+                        // Don't continue if action is already being taken.
+                        if(keyTimer > game.time.now) { return; }
+
+                        if (game.input.keyboard.isDown(Phaser.Keyboard.H)) {
+                            player.fire(game.directions.W);
+                            nextRound = true;
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.L)) {
+                            player.fire(game.directions.E);
+                            nextRound = true;
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.J)) {
+                            player.fire(game.directions.S);
+                            nextRound = true;
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.B)) {
+                            player.fire(game.directions.SW);
+                            nextRound = true;
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.N)) {
+                            player.fire(game.directions.SE);
+                            nextRound = true;
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.K)) {
+                            player.fire(game.directions.N);
+                            nextRound = true;
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.Y)) {
+                            player.fire(game.directions.NW);
+                            nextRound = true;
+                        }
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.U)) {
+                            player.fire(game.directions.NE);
+                            nextRound = true;
+                        }
+
+                        // Cancel
+                        else if (game.input.keyboard.isDown(Phaser.Keyboard.ESC)) {
+                            self.input.setState('normal');
+                            nextRound = true;
+                        }
+
+                        if(nextRound) {
+                            var gun = game.player.equipment.rightHand;
+                            ammoText.text = (gun.currentClip + '/' + gun.clipSize + '/' + gun.totalAmmo);
+
+                            keyTimer = game.time.now + Settings.turnPause;
+                            self.input.setState('normal');
+                        }
+                    }
                 },
                 'close': {
                     'onEnter': function () {
@@ -370,6 +456,11 @@ define([
             game.add.existing(levelText);
             levelText.text = 'Level: ' + Number(currentLevelIndex + 1);
             levelText.bringToTop();
+
+            var gun = game.player.equipment.rightHand;
+            game.add.existing(ammoText);
+            ammoText.text = (gun.currentClip + '/' + gun.clipSize + '/' + gun.totalAmmo);
+            ammoText.bringToTop();
 
             // Debug
             console.log('Dungeon level: ', currentLevelIndex, ' :: ', level);

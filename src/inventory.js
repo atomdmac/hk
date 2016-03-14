@@ -44,7 +44,23 @@ define([
         this.type  = '';
         this.count = 1;
         this.consumable = true;
+        this.durability = 100;
+        this.equipable  = false;
+
+        this.events.onUse     = new Phaser.Signal();
+        this.events.onConsume = new Phaser.Signal();
+        this.events.onBreak   = new Phaser.Signal();
+
+        this.promise = {
+            then: function (cb) {
+                this.thenCb = cb;
+            },
+            thenCb: null
+        };
     }
+
+    Item.prototype = Object.create(Phaser.Sprite.prototype);
+    Item.prototype.constructor = Item;
 
     Item.prototype.use = function () {};
 

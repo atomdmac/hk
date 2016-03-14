@@ -61,6 +61,10 @@ define([
         // The path to the quary.
         this._quaryPath = null;
 
+        // Events
+        this.events.onEquip = new Phaser.Signal();
+        this.events.onUnequip = new Phaser.Signal();
+
     }
 
     Monster.prototype = Object.create(Entity.prototype);
@@ -150,7 +154,7 @@ define([
             this.health += Dice.roll(this.stats.hitDie);
         }
         this.maxHealth = this.health;
-        game.log.print(this.name, ' has ', this.health);
+        // game.log.print(this.name, ' has ', this.health);
     };
 
     return Monster;

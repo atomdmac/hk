@@ -1,8 +1,10 @@
 define([
     'phaser',
     'rot',
-    'monster'
-], function (Phaser, ROT, Monster) { 
+    'monster',
+    'gun',
+    'bullet'
+], function (Phaser, ROT, Monster, Gun, Bullet) { 
     'use strict';
 
     // Private vars.
@@ -46,6 +48,15 @@ define([
         // Inventory
         this.inventory = [];
 
+        // DEBUG: Start with a gun.
+        var gun = new Gun(game, 0, 0, null, this);
+        gun.pickup(this);
+        this.equip(gun, 'rightHand');
+
+        // Set to TRUE when the player has provided input and an action is pending
+        // (like a bullet flying through the air).
+        this.isActing = false;
+
     }
 
     Player.prototype = Object.create(Monster.prototype);
@@ -53,6 +64,35 @@ define([
 
     Player.prototype.act = function () {
         game.engine.lock();
+    };
+
+    Player.prototype.move = function (direction, skipAnimation) {
+        var newTileX = this.tile.x + direction.x,
+            newTileY = this.tile.y + direction.y;
+
+        var item = this.level.containsItem(newTileX, newTileY);
+        if(item) item.use(this);
+        return Monster.prototype.move.call(this, direction, skipAnimation);
+    };
+
+    Player.prototype.equip = function (item, slot) {
+        if(this.equipment[slot] === undefined) return false;
+        this.equipment[slot] = item;
+    };
+
+    Player.prototype.reload = function () {
+        return this.equipment.rightHand.reload();
+    };
+
+    Player.prototype.fire = function (direction) {
+
+        // TODO: Don't assume projecttile weapon is equiped.
+        var result = this.equipment.rightHand.fire(direction);
+
+        // If weapon used successfully, release engine lock.
+        if(result) game.engine.unlock();
+
+        return result;
     };
 
     return Player;
