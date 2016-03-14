@@ -118,7 +118,7 @@ define([
         mapCellular.connect(function (x, y, type) {
             // Create a tile for this location.
             var tile = new DungeonTile(self.terrain, type, x, y, tileWidth, tileHeight);
-            // tile.hide();
+            tile.hide();
 
             // Keep a cache of passable tiles.
             if(type === 0) self.passableTiles.push(tile);
@@ -130,8 +130,8 @@ define([
         (function () {
             for(var x=0; x<Settings.map.width; x++) {
                 for(var y=0; y<Settings.map.height; y++) {
-                    if(self.hasPassableNeighbor(x, y)) {
-                        self.getTile(x, y).type = 2;
+                    if(!self.isPassable(x, y) && self.hasPassableNeighbor(x, y)) {
+                        self.getTile(x, y).index = 2;
                     }
                 }
             }
@@ -200,7 +200,7 @@ define([
         // Generate monsters
         this.monsters = game.add.group();
         var curMonster, curSpawn;
-        for(var m=0; m<0; m++) {
+        for(var m=0; m<10; m++) {
         	curSpawn = this.getRandomPassable();
         	curMonster = new Undead(game, curSpawn.x, curSpawn.y, 'undead');
         	curMonster.setLevel(this);
@@ -210,8 +210,6 @@ define([
         	curMonster.frame = 1; // Math.round(Math.random() * 23);
             curMonster.events.onMove.add(this.handleEntityMove, this);
             curMonster.events.onKilled.add(this.handleMonsterDeath, this);
-
-
 
         	this.monsters.addChild(curMonster);
         }
